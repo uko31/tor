@@ -50,7 +50,7 @@ class transmission:
       # add loop through all available tasks and remove them
       for torrent in self.tc.get_torrents():
          print("remove torrent: %d - %s" % (torrent.id, torrent.name))
-         self.tc.remove_torrent(torrent.id)
+         self.tc.remove_torrent(torrent.id, delete_data=True)
       return(True)
    
    def view(self):
@@ -143,11 +143,11 @@ if ( options.ext ):
    #print("DEBUG: %s" % cfg.var)
 
 if ( options.add ):
-   print("add download task %s" % options.add)
+   #print("add download task %s" % options.add)
    tr.add(options.add)
 
 if ( options.remove ):
-   print("remove download task %s" % options.remove)
+   #print("remove download task %s" % options.remove)
    tr.remove(options.remove)
 
 if ( options.download ):
@@ -155,11 +155,11 @@ if ( options.download ):
    tr.addall(os.path.realpath(cfg.var["input"]))
 
 if ( options.clear ):
-   print("clear all finished downloads")
+   #print("clear all finished downloads")
    tr.clear()
 
 if ( options.purge ):
-   print("purge all download tasks")
+   #print("purge all download tasks")
    tr.purge()
    
 if ( options.view ):
