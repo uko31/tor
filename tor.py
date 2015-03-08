@@ -4,6 +4,7 @@ import argparse
 import json
 import os.path
 import transmissionrpc
+import sys
 
 class transmission:
    def __init__(self, hostname, port):
@@ -17,15 +18,25 @@ class transmission:
           
 
    def add(self, torrent):
-      self.tc.add_torrent("file://%s" % os.path.realpath(torrent))
+      try:
+         tor = self.tc.add_torrent("file://%s" % os.path.realpath(torrent))
+      except transmissionrpc.TransmissionError as e:
+         print("! Torrent: %s not added:%s" % (os.path.basename(torrent), e.message))
+         return(False)
+          
+      print(">> Torrent added: %s" % (tor.name))
       os.remove(torrent)
+      return(True)
 
    def addall(self, path):
-      for torrent in os.walk(path):
-          self.add(torrent)
+      for root, dirs, files in os.walk(path):
+         if ( root == path ):
+            for f in files:
+               if ( f.rsplit('.', 1)[1] == 'torrent' ):
+                  self.add(os.path.join(root,f))
 
    def remove(self, id):
-      self.tc.rm_torrent(id)
+      self.tc.remove_torrent(id)
 
    def clear(self):
       # add a loop through all available torrent and remove finished ones
@@ -37,6 +48,9 @@ class transmission:
    
    def purge(self):
       # add loop through all available tasks and remove them
+      for torrent in self.tc.get_torrents():
+         print("remove torrent: %d - %s" % (torrent.id, torrent.name))
+         self.tc.remove_torrent(torrent.id)
       return(True)
    
    def view(self):
@@ -50,11 +64,11 @@ class configuration:
       self.filename = filename
       default_cfg="""{
          "hostname": "nas",
-         "input": "~/dl",
-         "output": "~/mnt/nas/downloads",
+         "input": "$HOME/dl",
+         "output": "$HOME/mnt/nas/downloads",
          "port": "9091",
          "ext": "*.torrent",
-         "sqlite": "~/mnt/nas/downloads/.database",
+         "sqlite": "$HOME/mnt/nas/downloads/.database",
          "sqlite_update": "yes"
       }
       """
@@ -132,7 +146,7 @@ if ( options.remove ):
    tr.remove(options.remove)
 
 if ( options.download ):
-   print("download all")
+   #print("download all")
    tr.addall(os.path.realpath(cfg.var["input"]))
 
 if ( options.clear ):
