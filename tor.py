@@ -55,9 +55,14 @@ class transmission:
    
    def view(self):
       # a a loop to dipslay each and every tasks.
-      for torrent in self.tc.get_torrents():
-         print("%d - %-11s - %3.0f%% - %s" % (torrent.id, torrent.status, torrent.progress, torrent.name))
-      return(True)
+      torrents = self.tc.get_torrents()
+      if len(torrents) != 0:
+         for torrent in torrents:
+            print("%d - %-11s - %3.0f%% - %s" % (torrent.id, torrent.status, torrent.progress, torrent.name))
+         return(True)
+      else:
+         print("No download queued")
+         return(False)
 
 class configuration:
    def __init__(self, filename):
@@ -158,5 +163,5 @@ if ( options.purge ):
    tr.purge()
    
 if ( options.view ):
-   print("view current download tasks")
+   #print("view current download tasks")
    tr.view()
