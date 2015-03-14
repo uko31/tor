@@ -126,12 +126,12 @@ class argument:
         self.parser.add_argument("-v", "--version",  action="store_true", help="version")
 
         # single operations:
-        self.parser.add_argument("-a", "--add",    help="download file specified")
-        self.parser.add_argument("-r", "--remove", help="remove download task specified by id")
+        self.parser.add_argument("-a", "--add",    metavar = "FILENAME", help="download file specified")
+        self.parser.add_argument("-r", "--remove", metavar = "ID",       help="remove download task specified by id")
 
         # update configuration:
-        self.parser.add_argument("--input",  help="update input configuration variable")
-        self.parser.add_argument("--output", help="update output configuration variable")
+        self.parser.add_argument("--input",  metavar = "INPUT_DIRECTORY",  help="update input configuration variable")
+        self.parser.add_argument("--output", metavar = "OUTPUT_DIRECTORY", help="update output configuration variable")
         self.parser.add_argument("--port",   help="update port configuration variable", type=int)
         self.parser.add_argument("--ext",    help="update ext configuration variable")
 
