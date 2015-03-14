@@ -116,7 +116,7 @@ class configuration:
 
 class argument:
     def __init__(self):
-        self.parser = argparse.ArgumentParser()
+        self.parser = argparse.ArgumentParser(prog="tor")
 
         # global operations:
         self.parser.add_argument("-d", "--download", action="store_true", help="download all file from the input directory")
