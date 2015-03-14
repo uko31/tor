@@ -1,0 +1,22 @@
+tor : my download utility script:
+
+usage: tor [-h] [-d] [-l] [-c] [-p] [-v] [-a FILENAME] [-r ID]
+           [--input INPUT_DIRECTORY] [--output OUTPUT_DIRECTORY] [--port PORT]
+           [--ext EXT]
+
+optional arguments:
+  -h, --help            show this help message and exit
+  -d, --download        download all file from the input directory
+  -l, --list            display all download tasks
+  -c, --clear           remove all finished tasks
+  -p, --purge           purge all downloadtasks
+  -v, --version         version
+  -a FILENAME, --add FILENAME
+                        download file specified
+  -r ID, --remove ID    remove download task specified by id
+  --input INPUT_DIRECTORY
+                        update input configuration variable
+  --output OUTPUT_DIRECTORY
+                        update output configuration variable
+  --port PORT           update port configuration variable
+  --ext EXT             update ext configuration variable
