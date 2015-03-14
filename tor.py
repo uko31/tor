@@ -15,7 +15,7 @@ class tor:
         try:
             self.tc = transmissionrpc.Client(self.hostname, port=self.port)
         except transmissionrpc.TransmissionError as e:
-            print("Transmission connection error [%s] => exiting..." % e.info)
+            print("ERROR: Transmission connection failure [%s] => exiting..." % e.info)
             exit()
           
 
@@ -23,10 +23,10 @@ class tor:
         try:
             tor = self.tc.add_torrent("file://%s" % os.path.realpath(torrent))
         except transmissionrpc.TransmissionError as e:
-            print("! Torrent: %s not added:%s" % (os.path.basename(torrent), e.message))
+            print("ERROR: Download %s not added (reason: %s)" % (os.path.basename(torrent), e.info))
             return(False)
             
-        print(">> Ad torrent: %s" % (tor.name))
+        print(">> Add download: %s" % (tor.name))
         os.remove(torrent)
         return(True)
 
@@ -44,14 +44,14 @@ class tor:
         # add a loop through all available torrent and remove finished ones
         for torrent in self.tc.get_torrents():
             if torrent.status == "seeding":
-                print("remove torrent: %d - %s (completed in: %s)" % (torrent.id, torrent.name, (torrent.date_done-torrent.date_added)))
+                print("Remove download: %d - %s (completed in: %s)" % (torrent.id, torrent.name, (torrent.date_done-torrent.date_added)))
                 self.tc.remove_torrent(torrent.id)
         return(True)
     
     def purge(self):
         # add loop through all available tasks and remove them
         for torrent in self.tc.get_torrents():
-            print("remove torrent: %d - %s" % (torrent.id, torrent.name))
+            print("Remove download: %d - %s" % (torrent.id, torrent.name))
             self.tc.remove_torrent(torrent.id, delete_data=True)
         return(True)
     
@@ -144,47 +144,49 @@ class argument:
 if __name__ == "__main__":
     
     arg = argument()
-    cfg = configuration(os.path.realpath(__CONFIG_FILE__))
-    tr = tor(cfg.hostname, cfg.port )
+    cfg = configuration(__CONFIG_FILE__)
     
     if ( arg.options.input ):
         print("update input configuration variable: %s" % arg.options.input)
-        cfg.input_dir = options.input
+        cfg.input_dir = arg.options.input
         cfg.update()
 
-    if ( arg.options.output ):
+    elif ( arg.options.output ):
         print("update output configuration variable: %s" % arg.options.output)
-        cfg.output_dir = options.output
+        cfg.output_dir = arg.options.output
         cfg.update()
 
-    if ( arg.options.port ):
+    elif ( arg.options.port ):
         print("update port configuration variable: %s" % arg.options.port)
-        cfg.port = options.port
+        cfg.port = arg.options.port
         cfg.update()
 
-    if ( arg.options.ext ):
+    elif ( arg.options.ext ):
         print("update port configuration variable: %s" % arg.options.ext)
-        cfg.ext = options.ext
+        cfg.ext = arg.options.ext
         cfg.update()
 
-    if ( arg.options.add ):
-        tr.add(options.add)
+    else:
+        tr = tor(cfg.hostname, cfg.port )
+    
+        if ( arg.options.add ):
+            tr.add(options.add)
 
-    if ( arg.options.remove ):
-        tr.remove(options.remove)
+        if ( arg.options.remove ):
+            tr.remove(options.remove)
 
-    if ( arg.options.download ):
-        tr.addall(os.path.realpath(cfg.input))
+        if ( arg.options.download ):
+            tr.addall(os.path.realpath(cfg.input_dir))
 
-    if ( arg.options.clear ):
-        tr.clear()
+        if ( arg.options.clear ):
+            tr.clear()
 
-    if ( arg.options.purge ):
-        tr.purge()
-        
-    if ( arg.options.list ):
-        tr.list()
+        if ( arg.options.purge ):
+            tr.purge()
+            
+        if ( arg.options.list ):
+            tr.list()
 
-    if ( arg.options.version ):
-        tr.version()
-        cfg.display()
+        if ( arg.options.version ):
+            tr.version()
+            cfg.display()
