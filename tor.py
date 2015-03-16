@@ -1,13 +1,47 @@
 #!/usr/bin/python
 
+# Author : m.gregoriades@gmail.com
+# Date   : Feb. 2015
+# Version: 0.2
+
+# classes description:
+# - - - - - - - - - - 
+# class TransmissionServer:
+#   self._hostname
+#   self._port
+#   self._handle
+#   self.__init__(self, hostname, port)
+#   self.Add(self, task)
+#   self.Remove(self, task)
+#   self.List(self)
+#   self.Purge(Self)
+#   self.Clear(Self)
+#   (deprecated) self.AddAll(self) - should not be in that class
+
+# class CommandLine:
+#   self.__init__(self)
+
+# class UserInterface:
+#   self.__init__(self)
+
+# class Configuration:
+
+# class Options:
+
+# required modules:
+# - - - - - - - - -
 import argparse
 import json
 import os, os.path
 import transmissionrpc
 import datetime
 
+# constants:
+# - - - - - 
 __CONFIG_FILE__ = os.getenv("HOME")+"/.config/tor/config.json"
 
+# code:
+# - - -
 class tor:
     def __init__(self, hostname, port):
         self.hostname = hostname
