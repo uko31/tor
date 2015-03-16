@@ -6,23 +6,46 @@
 
 # classes description:
 # - - - - - - - - - - 
+
+# class Task:
+#	self._id
+#	self._status
+#	self._progress
+#	self._name
+#	self.__init__(self, id, status, progress, name)
+#	self.__str__(self)
+
 # class TransmissionServer:
 #   self._hostname
 #   self._port
-#   self._handle
+#   self._server
 #   self.__init__(self, hostname, port)
-#   self.Add(self, task)
+#   self.Add(self, filename)
 #   self.Remove(self, task)
 #   self.List(self)
 #   self.Purge(Self)
 #   self.Clear(Self)
 #   (deprecated) self.AddAll(self) - should not be in that class
 
-# class CommandLine:
-#   self.__init__(self)
+# class Task:
+#	self._id
+#	self._status
+#	self._progress
+#	self._name
+#	self.__init__(self, id, status, progress, name)
+#	self.__str__(self)
 
-# class UserInterface:
+# class DisplayCLI:
 #   self.__init__(self)
+#	self.ViewList(self, task_list)
+#	self.ViewAdd(self, task)
+#	self.ViewRemove(self, task)
+
+# class DisplayGUI:
+#   self.__init__(self)
+#	self.ViewList(self, task_list)
+#	self.ViewAdd(self, task)
+#	self.ViewRemove(self, task)
 
 # class Configuration:
 
@@ -42,27 +65,40 @@ __CONFIG_FILE__ = os.getenv("HOME")+"/.config/tor/config.json"
 
 # code:
 # - - -
-class tor:
+class Task:
+	def __init__(self, id, status, progress, name):
+		self._id       = id
+		self._status   = status
+		self._progress = progress
+		self._name     = name
+
+	def __str__(self):
+		print("%-3s (%-10s) [%3.Of%%] %s" % (self._id,
+											 self._status,
+											 self._progress,
+											 self._name))
+		
+class TransmissionServer:
     def __init__(self, hostname, port):
-        self.hostname = hostname
-        self.port = port
+        self._hostname = hostname
+        self._port     = port
         try:
-            self.tc = transmissionrpc.Client(self.hostname, port=self.port)
+            self._conn = transmissionrpc.Client(self._hostname, port=self._port)
         except transmissionrpc.TransmissionError as e:
             print("ERROR: Transmission connection failure [%s] => exiting..." % e.info)
             exit()
-          
 
-    def add(self, torrent):
+    def Add(self, filename):
         try:
-            tor = self.tc.add_torrent("file://%s" % os.path.realpath(torrent))
+            tor = self.tc.add_torrent("file://%s" % os.path.realpath(filename))
+			task = Task(tor.id, tor.status, tor.progress, tor.name)
         except transmissionrpc.TransmissionError as e:
-            print("ERROR: Download %s not added (reason: %s)" % (os.path.basename(torrent), e.info))
+            print("ERROR: Download %s not added (reason: %s)" % (os.path.basename(filename), e.info))
             return(False)
             
-        print(">> Add download: %s" % (tor.name))
+        print(">> Add download: %s" % (task._name))
         os.remove(torrent)
-        return(True)
+        return(task)
 
     def addall(self, path):
         for root, dirs, files in os.walk(path):
@@ -103,25 +139,23 @@ class tor:
     def version(self):
         print("version: 0.1")
 
-class configuration:
+class Configuration:
     def __init__(self, filename, 
                  hostname   = "nas", 
-                 input_dir  = os.getenv("HOME")+"/dl", 
-                 output_dir = os.getenv("HOME")+"/mnt/nas/downloads", 
+                 input_dir  = "%s/dl" % os.getenv("HOME"), 
+                 output_dir = "%s/mnt/nas/downloads" % os.getenv("HOME"), 
                  port       = "9091",
-                 ext        = "*.torrent",
-                 sqlite     = os.getenv("HOME")+"/mnt/nas/downloads/.database"):
-        self.filename = filename
-        
-        self.hostname   = hostname
-        self.input_dir  = input_dir
-        self.output_dir = output_dir
-        self.port       = port
-        self.ext        = ext
-        self.sqlite     = sqlite
+                 ext        = "*.torrent"):
 
-        if os.path.isfile(self.filename):
-            f = open(self.filename, "r")
+		self._filename   = filename
+        self._hostname   = hostname
+        self._input_dir  = input_dir
+        self._output_dir = output_dir
+        self._port       = port
+        self._ext        = ext
+
+        if os.path.isfile(self._filename):
+            f = open(self._filename, "r")
             for p, v in dict(json.load(f)).items():
                 setattr(self, p, v)
             f.close()
@@ -131,15 +165,14 @@ class configuration:
             self.update()
 
     def update(self):
-        if not os.path.isdir(os.path.dirname(self.filename)):
-            os.makedirs(os.path.dirname(self.filename))
-        f = open(self.filename, "w")
-        string = json.dump({"hostname": "%s" % self.hostname,
-                            "input_dir": "%s" % self.input_dir,
-                            "output_dir": "%s" % self.output_dir,
-                            "port": "%s" % self.port, 
-                            "ext": "%s" % self.ext,
-                            "sqlite": "%s" % self.sqlite},
+        if not os.path.isdir(os.path.dirname(self._filename)):
+            os.makedirs(os.path.dirname(self._filename))
+        f = open(self._filename, "w")
+        string = json.dump({"hostname": "%s" % self._hostname,
+                            "input_dir": "%s" % self._input_dir,
+                            "output_dir": "%s" % self._output_dir,
+                            "port": "%s" % self._port, 
+                            "ext": "%s" % self._ext},
                            f, indent = 4, sort_keys = True)
         f.close()
         
@@ -148,7 +181,7 @@ class configuration:
             if not p.count("__") and not str(getattr(self, p)).count("<bound method"):
                 print(" >> %-10s : %s" % (p, getattr(self, p)))
 
-class argument:
+class Options:
     def __init__(self):
         self.parser = argparse.ArgumentParser(prog="tor")
 
