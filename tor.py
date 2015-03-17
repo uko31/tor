@@ -27,14 +27,6 @@
 #   self.Clear(Self)
 #   (deprecated) self.AddAll(self) - should not be in that class
 
-# class Task:
-#	self._id
-#	self._status
-#	self._progress
-#	self._name
-#	self.__init__(self, id, status, progress, name)
-#	self.__str__(self)
-
 # class DisplayCLI:
 #   self.__init__(self)
 #	self.ViewList(self, task_list)
@@ -61,6 +53,7 @@ import datetime
 
 # constants:
 # - - - - - 
+__VERSION__ = "0.2.0"
 __CONFIG_FILE__ = os.getenv("HOME")+"/.config/tor/config.json"
 
 # code:
@@ -90,7 +83,7 @@ class TransmissionServer:
 
     def Add(self, filename):
         try:
-            tor = self.tc.add_torrent("file://%s" % os.path.realpath(filename))
+            tor  = self._conn.add_torrent("file://%s" % os.path.realpath(filename))
 			task = Task(tor.id, tor.status, tor.progress, tor.name)
         except transmissionrpc.TransmissionError as e:
             print("ERROR: Download %s not added (reason: %s)" % (os.path.basename(filename), e.info))
@@ -100,44 +93,48 @@ class TransmissionServer:
         os.remove(torrent)
         return(task)
 
+	# deprecated
     def addall(self, path):
         for root, dirs, files in os.walk(path):
             if ( root == path ):
                 for f in files:
                     if ( f.rsplit('.', 1)[1] == 'torrent' ):
-                        self.add(os.path.join(root,f))
+                        self.Add(os.path.join(root,f))
+	# this function should be removed from that class
+						
+    def Remove(self, id):
+        self._conn.remove_torrent(id)
 
-    def remove(self, id):
-        self.tc.remove_torrent(id)
-
-    def clear(self):
+    def Clear(self):
         # add a loop through all available torrent and remove finished ones
-        for torrent in self.tc.get_torrents():
+        for torrent in self._conn.get_torrents():
             if torrent.status == "seeding":
                 print("Remove download: %d - %s (completed in: %s)" % (torrent.id, torrent.name, (torrent.date_done-torrent.date_added)))
                 self.tc.remove_torrent(torrent.id)
         return(True)
     
-    def purge(self):
+    def Purge(self):
         # add loop through all available tasks and remove them
-        for torrent in self.tc.get_torrents():
+        for torrent in self._conn.get_torrents():
             print("Remove download: %d - %s" % (torrent.id, torrent.name))
-            self.tc.remove_torrent(torrent.id, delete_data=True)
+            self._conn.remove_torrent(torrent.id, delete_data=True)
         return(True)
     
-    def list(self):
-        # a a loop to dipslay each and every tasks.
-        torrents = self.tc.get_torrents()
+    def List(self):
+        tasks = list()
+
+        torrents = self._conn.get_torrents()
         if len(torrents) != 0:
             for torrent in torrents:
-                print("%d - %-11s - %3.0f%% - %s" % (torrent.id, torrent.status, torrent.progress, torrent.name))
-            return(True)
+				tasks.append(Task(torrent.id, torrent.status, torrent.progress, torrent.name))
+            return(tasks)
         else:
-            print("No download queued")
             return(False)
 
-    def version(self):
-        print("version: 0.1")
+    def Version(self):
+        return("version: %s", __VERSION__)
+		
+	def __str__(self):
 
 class Configuration:
     def __init__(self, filename, 
@@ -155,54 +152,58 @@ class Configuration:
         self._ext        = ext
 
         if os.path.isfile(self._filename):
-            f = open(self._filename, "r")
-            for p, v in dict(json.load(f)).items():
-                setattr(self, p, v)
-            f.close()
+			try:
+				fd = open(self._filename, "r")
+				for key, value in dict(json.load(fd)).items():
+					setattr(self, key, value)
+				fd.close()
+			except IOError as e:
+				print("ERROR while tryin to open [%s]" % (e.info, self._filename))
         else:
-            #for p, v in dict(json.loads(default_cfg)).item():
-                #setattr(self, p, v)
             self.update()
 
-    def update(self):
+    def Update(self):
         if not os.path.isdir(os.path.dirname(self._filename)):
             os.makedirs(os.path.dirname(self._filename))
-        f = open(self._filename, "w")
-        string = json.dump({"hostname": "%s" % self._hostname,
-                            "input_dir": "%s" % self._input_dir,
-                            "output_dir": "%s" % self._output_dir,
-                            "port": "%s" % self._port, 
-                            "ext": "%s" % self._ext},
-                           f, indent = 4, sort_keys = True)
-        f.close()
-        
-    def display(self):
-        for p in dir(self):
-            if not p.count("__") and not str(getattr(self, p)).count("<bound method"):
-                print(" >> %-10s : %s" % (p, getattr(self, p)))
+        try:
+			fd = open(self._filename, "w")
+			string = json.dump({"hostname": "%s" % self._hostname,
+								"input_dir": "%s" % self._input_dir,
+								"output_dir": "%s" % self._output_dir,
+								"port": "%s" % self._port, 
+								"ext": "%s" % self._ext},
+							   fd, indent = 4, sort_keys = True)
+			fd.close()
+        except IOError as e:
+			print("ERROR while tryin to open [%s]" % (e.info, self._filename))
+		
+    def __str__(self):
+        for key in dir(self):
+            if not key.count("__") and not str(getattr(self, key)).count("<bound method"):
+                print(" >> %-10s : %s" % (key, getattr(self, key)))
 
 class Options:
     def __init__(self):
-        self.parser = argparse.ArgumentParser(prog="tor")
+        self._parser = argparse.ArgumentParser(prog="tor")
 
         # global operations:
-        self.parser.add_argument("-d", "--download", action="store_true", help="download all file from the input directory")
-        self.parser.add_argument("-l", "--list",     action="store_true", help="display all download tasks")
-        self.parser.add_argument("-c", "--clear",    action="store_true", help="remove all finished tasks")
-        self.parser.add_argument("-p", "--purge",    action="store_true", help="purge all downloadtasks")
-        self.parser.add_argument("-v", "--version",  action="store_true", help="version")
+        self._parser.add_argument("-d", "--download", action="store_true", help="download all file from the input directory")
+        self._parser.add_argument("-l", "--list",     action="store_true", help="display all download tasks")
+        self._parser.add_argument("-c", "--clear",    action="store_true", help="remove all finished tasks")
+        self._parser.add_argument("-p", "--purge",    action="store_true", help="purge all downloadtasks")
+        self._parser.add_argument("-v", "--version",  action="store_true", help="version")
 
         # single operations:
-        self.parser.add_argument("-a", "--add",    metavar = "FILENAME", help="download file specified")
-        self.parser.add_argument("-r", "--remove", metavar = "ID",       help="remove download task specified by id")
+        self._parser.add_argument("-a", "--add",    metavar = "FILENAME", help="download file specified")
+        self._parser.add_argument("-r", "--remove", metavar = "ID",       help="remove download task specified by id")
 
         # update configuration:
-        self.parser.add_argument("--input",  metavar = "INPUT_DIRECTORY",  help="update input configuration variable")
-        self.parser.add_argument("--output", metavar = "OUTPUT_DIRECTORY", help="update output configuration variable")
-        self.parser.add_argument("--port",   help="update port configuration variable", type=int)
-        self.parser.add_argument("--ext",    help="update ext configuration variable")
+        self._parser.add_argument("--input",  metavar = "INPUT_DIRECTORY",  help="update input configuration variable")
+        self._parser.add_argument("--output", metavar = "OUTPUT_DIRECTORY", help="update output configuration variable")
+        self._parser.add_argument("--port",   help="update port configuration variable", type=int)
+        self._parser.add_argument("--ext",    help="update ext configuration variable")
 
-        self.options = self.parser.parse_args()
+        self.options = self._parser.parse_args()
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Main Program
