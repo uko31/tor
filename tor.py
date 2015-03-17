@@ -27,13 +27,13 @@
 #   self.Clear(Self)
 #   (deprecated) self.AddAll(self) - should not be in that class
 
-# class DisplayCLI:
+# class ViewCLI:
 #   self.__init__(self)
 #	self.ViewList(self, task_list)
 #	self.ViewAdd(self, task)
 #	self.ViewRemove(self, task)
 
-# class DisplayGUI:
+# class ViewGUI:
 #   self.__init__(self)
 #	self.ViewList(self, task_list)
 #	self.ViewAdd(self, task)
@@ -114,7 +114,6 @@ class TransmissionServer:
         return(True)
     
     def Purge(self):
-        # add loop through all available tasks and remove them
         for torrent in self._conn.get_torrents():
             print("Remove download: %d - %s" % (torrent.id, torrent.name))
             self._conn.remove_torrent(torrent.id, delete_data=True)
@@ -136,6 +135,33 @@ class TransmissionServer:
 		
 	def __str__(self):
 
+class ViewCLI:
+	def __init__(self):
+		return(True)
+		
+ 	def self.ViewList(self, task_list):
+		return(True)
+	
+ 	def self.ViewAdd(self, task):
+		return(True)
+		
+ 	def self.ViewRemove(self, task):
+		return(True)
+
+class ViewGUI:
+    def self.__init__(self):
+		return(True)
+		
+ 	def self.ViewList(self, task_list):
+		return(True)
+		
+ 	def self.ViewAdd(self, task):
+		return(True)
+		
+ 	def self.ViewRemove(self, task):
+		return(True)
+
+		
 class Configuration:
     def __init__(self, filename, 
                  hostname   = "nas", 
@@ -204,7 +230,7 @@ class Options:
         self._parser.add_argument("--ext",    help="update ext configuration variable")
 
         self.options = self._parser.parse_args()
-
+		
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Main Program
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
