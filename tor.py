@@ -8,48 +8,58 @@
 # - - - - - - - - - - 
 
 # class Task:
-#    self._id
-#    self._status
-#    self._progress
-#    self._name
-#    self.__init__(self, id, status, progress, name)
-#    self.__str__(self)
+#   _id
+#   _status
+#   _progress
+#   _name
+#   __init__(self, id, status, progress, name)
+#   __str__(self)
 
 # class TransmissionServer:
-#   self._hostname
-#   self._port
-#   self._server
-#   self.__init__(self, hostname, port)
-#   self.Add(self, filename)
-#   self.Remove(self, task)
-#   self.List(self)
-#   self.Purge(Self)
-#   self.Clear(Self)
-#   (deprecated) self.AddAll(self) - should not be in that class
+#   _hostname
+#   _port
+#   _server
+#   __init__(self, hostname, port)
+#   Add(self, filename)
+#   Remove(self, task)
+#   List(self)
+#   Purge(Self)
+#   Clear(Self)
 
 # class ViewCLI:
-#   self.__init__(self)
-#    self.ViewList(self, task_list)
-#    self.ViewAdd(self, task)
-#    self.ViewRemove(self, task)
+#   __init__(self)
+#   List(self, task_list)
+#   Add(self, task)
+#   Remove(self, task)
+#   Purge(self, task)
 
 # class ViewGUI:
-#   self.__init__(self)
-#    self.ViewList(self, task_list)
-#    self.ViewAdd(self, task)
-#    self.ViewRemove(self, task)
+#   __init__(self)
+#   List(self, task_list)
+#   Add(self, task)
+#   Remove(self, task)
+#   Purge(self, task)
 
 # class Configuration:
+#	__init__(self, filename, hostname, port, input_dir, output_dir, ext)
+#	Update(self)
+#	__str__(self)
 
 # class Options:
+#	__init__(self)
+#	ParseArgs(self)
+#	__str__(self)
 
 # required modules:
 # - - - - - - - - -
 import argparse
 import json
-import os, os.path
-# import transmissionrpc
+import os
+import os.path
+import transmissionrpc
 import datetime
+from tkinter import *
+from tkinter import ttk
 
 # constants:
 # - - - - - 
@@ -140,26 +150,32 @@ class ViewCLI:
     def __init__(self):
         return(True)
         
-    def ViewList(self, task_list):
+    def List(self, task_list):
         return(True)
     
-    def ViewAdd(self, task):
+    def Add(self, task):
         return(True)
         
-    def ViewRemove(self, task):
+    def Remove(self, task):
+        return(True)
+
+	def Purge(self, task):
         return(True)
 
 class ViewGUI:
     def __init__(self):
         return(True)
         
-    def ViewList(self, task_list):
+    def List(self, task_list):
         return(True)
         
-    def ViewAdd(self, task):
+    def Add(self, task):
         return(True)
         
-    def ViewRemove(self, task):
+    def Remove(self, task):
+        return(True)
+
+	def Purge(self, task):
         return(True)
 
         
@@ -216,6 +232,9 @@ class Options:
     def __init__(self):
         self._parser = argparse.ArgumentParser(prog="tor")
 
+        # Grphic User Interface:
+        self._parser.add_argument("-g", "--gui", action="store_true", help="launch the GUI")
+
         # global operations:
         self._parser.add_argument("-d", "--download", action="store_true", help="download all file from the input directory")
         self._parser.add_argument("-l", "--list",     action="store_true", help="display all download tasks")
@@ -258,51 +277,69 @@ class Options:
 if __name__ == "__main__":
     
     opt = Options()
-    print(opt)
     cfg = Configuration(__CONFIG_FILE__)
-    print(cfg)
     
-    if ( opt.input ):
-        print("update input configuration variable: %s" % opt.input)
-        cfg.input_dir = opt.input
-        cfg.Update()
+	# graphic mode
+	if opt.gui:
+		TorGUI = Tk()
+		TorGUI.title("Tor - the GUI")
+		ViewGUI(TorGUI)
+		TorGUI.mainloop()
+	
+	# cli mode
+	else:
+		view = ViewCLI()
+		if ( opt.input ):
+			print("update input configuration variable: %s" % opt.input)
+			cfg.input_dir = opt.input
+			cfg.Update()
+			print(cfg)
 
-    elif ( opt.output ):
-        print("update output configuration variable: %s" % opt.output)
-        cfg.output_dir = opt.output
-        cfg.Update()
+		elif ( opt.output ):
+			print("update output configuration variable: %s" % opt.output)
+			cfg.output_dir = opt.output
+			cfg.Update()
+			print(cfg)
 
-    elif ( opt.port ):
-        print("update port configuration variable: %s" % opt.port)
-        cfg.port = opt.port
-        cfg.Update()
+		elif ( opt.port ):
+			print("update port configuration variable: %s" % opt.port)
+			cfg.port = opt.port
+			cfg.Update()
+			print(cfg)
 
-    elif ( opt.ext ):
-        print("update port configuration variable: %s" % opt.ext)
-        cfg.ext = opt.ext
-        cfg.Update()
+		elif ( opt.ext ):
+			print("update port configuration variable: %s" % opt.ext)
+			cfg.ext = opt.ext
+			cfg.Update()
+			print(cfg)
 
-    # else:
-        # tr = tor(cfg.hostname, cfg.port )
-    
-        # if ( opt.add ):
-            # tr.add(opt.add)
+		else:
+			ts = TransmissionServer( cfg.hostname, cfg.port )
+		
+			if ( opt.add ):
+				view.Add( ts.Add(opt.add) )
 
-        # if ( opt.remove ):
-            # tr.remove(opt.remove)
+			if ( opt.remove ):
+				view.Remove( ts.Remove(opt.remove) )
 
-        # if ( opt.download ):
-            # tr.addall(os.path.realpath(cfg.input_dir))
+			if ( opt.download ):
+				for root, dirs, files in os.walk(cfg.input_dir):
+					if ( root == path ):
+						for f in files:
+							if ( f.rsplit('.', 1)[1] == 'torrent' ):
+								view.Add( ts.Add(os.path.join(root,f)) )
 
-        # if ( opt.clear ):
-            # tr.clear()
+			if ( opt.clear ):
+				ts.Clear()
 
-        # if ( opt.purge ):
-            # tr.purge()
-            
-        # if ( opt.list ):
-            # tr.list()
+			if ( opt.purge ):
+				ts.Purge()
+				view.Purge()
+				
+			if ( opt.list ):
+				ts.List()
+				view.List()
 
-        # if ( opt.version ):
-            # tr.version()
-            # cfg.display()
+			if ( opt.version ):
+				ts.version()
+				cfg.display()
