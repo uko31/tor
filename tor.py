@@ -170,10 +170,10 @@ if __name__ == "__main__":
         tr = tor(cfg.hostname, cfg.port )
     
         if ( arg.options.add ):
-            tr.add(options.add)
+            tr.add(arg.options.add)
 
         if ( arg.options.remove ):
-            tr.remove(options.remove)
+            tr.remove(arg.options.remove)
 
         if ( arg.options.download ):
             tr.addall(os.path.realpath(cfg.input_dir))
