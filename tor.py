@@ -41,14 +41,14 @@
 #   Purge(self, task)
 
 # class Configuration:
-#	__init__(self, filename, hostname, port, input_dir, output_dir, ext)
-#	Update(self)
-#	__str__(self)
+#    __init__(self, filename, hostname, port, input_dir, output_dir, ext)
+#    Update(self)
+#    __str__(self)
 
 # class Options:
-#	__init__(self)
-#	ParseArgs(self)
-#	__str__(self)
+#    __init__(self)
+#    ParseArgs(self)
+#    __str__(self)
 
 # required modules:
 # - - - - - - - - -
@@ -64,8 +64,8 @@ from tkinter import ttk
 # constants:
 # - - - - - 
 __VERSION__ = "0.2.0"
-# __CONFIG_FILE__ = os.getenv("HOME")+"/.config/tor/config.json"
-__CONFIG_FILE__ = ".\\config.json"
+__CONFIG_FILE__ = os.getenv("HOME")+"/.config/tor/config.json"
+#__CONFIG_FILE__ = ".\\config.json"
 
 # code:
 # - - -
@@ -77,11 +77,8 @@ class Task:
         self._name     = name
 
     def __str__(self):
-        print("%-3s (%-10s) [%3.Of%%] %s" % (self._id,
-                                             self._status,
-                                             self._progress,
-                                             self._name))
-        
+        return("%-3s - %-11s - [%3.00f%%] %s" % (self._id, self._status, self._progress, self._name))
+
 class TransmissionServer:
     def __init__(self, hostname, port):
         self._hostname = hostname
@@ -95,40 +92,26 @@ class TransmissionServer:
     def Add(self, filename):
         try:
             tor  = self._conn.add_torrent("file://%s" % os.path.realpath(filename))
-            task = Task(tor.id, tor.status, tor.progress, tor.name)
+            #print(tor.status)
+            task = Task(id = tor.id, status = None, progress = 0, name = tor.name)
         except transmissionrpc.TransmissionError as e:
             print("ERROR: Download %s not added (reason: %s)" % (os.path.basename(filename), e.info))
             return(False)
             
-        print(">> Add download: %s" % (task._name))
-        os.remove(torrent)
+        os.remove(filename)
         return(task)
 
-    # deprecated
-    def addall(self, path):
-        for root, dirs, files in os.walk(path):
-            if ( root == path ):
-                for f in files:
-                    if ( f.rsplit('.', 1)[1] == 'torrent' ):
-                        self.Add(os.path.join(root,f))
-    # this function should be removed from that class
-                        
     def Remove(self, id):
+        tor = self._conn.get_torrent(id)
+        task = Task(tor.id, tor.status, tor.progress, tor.name)
         self._conn.remove_torrent(id)
+        return(task)
 
-    def Clear(self):
-        # add a loop through all available torrent and remove finished ones
-        for torrent in self._conn.get_torrents():
-            if torrent.status == "seeding":
-                print("Remove download: %d - %s (completed in: %s)" % (torrent.id, torrent.name, (torrent.date_done-torrent.date_added)))
-                self.tc.remove_torrent(torrent.id)
-        return(True)
-    
-    def Purge(self):
-        for torrent in self._conn.get_torrents():
-            print("Remove download: %d - %s" % (torrent.id, torrent.name))
-            self._conn.remove_torrent(torrent.id, delete_data=True)
-        return(True)
+    def Purge(self, id):
+        tor = self._conn.get_torrent(id)
+        task = Task(tor.id, tor.status, tor.progress, tor.name)
+        self._conn.remove_torrent(id, delete_data=True)
+        return(task)
     
     def List(self):
         tasks = list()
@@ -148,23 +131,28 @@ class TransmissionServer:
 
 class ViewCLI:
     def __init__(self):
-        return(True)
+        self.display = "cli"
         
     def List(self, task_list):
-        return(True)
+        for t in task_list:
+            print(t)
     
     def Add(self, task):
+        print(">> Add download: %s" % (task._name))
         return(True)
         
     def Remove(self, task):
+        print(">> Remove download: %d - %s" % (task._id, task._name))
         return(True)
 
-	def Purge(self, task):
+    def Purge(self, task):
+        print(">> Purge download: %d - %s" % (task._id, task._name))
         return(True)
 
 class ViewGUI:
-    def __init__(self):
-        return(True)
+    def __init__(self, parent):
+        self.display = "gui"
+        self.parent = parent
         
     def List(self, task_list):
         return(True)
@@ -175,7 +163,7 @@ class ViewGUI:
     def Remove(self, task):
         return(True)
 
-	def Purge(self, task):
+    def Purge(self, task):
         return(True)
 
         
@@ -239,12 +227,13 @@ class Options:
         self._parser.add_argument("-d", "--download", action="store_true", help="download all file from the input directory")
         self._parser.add_argument("-l", "--list",     action="store_true", help="display all download tasks")
         self._parser.add_argument("-c", "--clear",    action="store_true", help="remove all finished tasks")
-        self._parser.add_argument("-p", "--purge",    action="store_true", help="purge all downloadtasks")
+        self._parser.add_argument("-P", "--Purge",    action="store_true", help="purge all download tasks")
         self._parser.add_argument("-v", "--version",  action="store_true", help="version")
 
         # single operations:
         self._parser.add_argument("-a", "--add",    metavar = "FILENAME", help="download file specified")
         self._parser.add_argument("-r", "--remove", metavar = "ID",       help="remove download task specified by id")
+        self._parser.add_argument("-p", "--purge",  metavar = "ID",       help="purge download task specified by id")
 
         # update configuration:
         self._parser.add_argument("--input",  metavar = "INPUT_DIRECTORY",  help="update input configuration variable")
@@ -279,67 +268,71 @@ if __name__ == "__main__":
     opt = Options()
     cfg = Configuration(__CONFIG_FILE__)
     
-	# graphic mode
-	if opt.gui:
-		TorGUI = Tk()
-		TorGUI.title("Tor - the GUI")
-		ViewGUI(TorGUI)
-		TorGUI.mainloop()
-	
-	# cli mode
-	else:
-		view = ViewCLI()
-		if ( opt.input ):
-			print("update input configuration variable: %s" % opt.input)
-			cfg.input_dir = opt.input
-			cfg.Update()
-			print(cfg)
+    # graphic mode
+    if opt.gui:
+        TorGUI = Tk()
+        TorGUI.title("Tor - the GUI")
+        ViewGUI(TorGUI)
+        TorGUI.mainloop()
+    
+    # cli mode
+    else:
+        view = ViewCLI()
+        if ( opt.input ):
+            print("update input configuration variable: %s" % opt.input)
+            cfg.input_dir = opt.input
+            cfg.Update()
+            print(cfg)
 
-		elif ( opt.output ):
-			print("update output configuration variable: %s" % opt.output)
-			cfg.output_dir = opt.output
-			cfg.Update()
-			print(cfg)
+        elif ( opt.output ):
+            print("update output configuration variable: %s" % opt.output)
+            cfg.output_dir = opt.output
+            cfg.Update()
+            print(cfg)
 
-		elif ( opt.port ):
-			print("update port configuration variable: %s" % opt.port)
-			cfg.port = opt.port
-			cfg.Update()
-			print(cfg)
+        elif ( opt.port ):
+            print("update port configuration variable: %s" % opt.port)
+            cfg.port = opt.port
+            cfg.Update()
+            print(cfg)
 
-		elif ( opt.ext ):
-			print("update port configuration variable: %s" % opt.ext)
-			cfg.ext = opt.ext
-			cfg.Update()
-			print(cfg)
+        elif ( opt.ext ):
+            print("update port configuration variable: %s" % opt.ext)
+            cfg.ext = opt.ext
+            cfg.Update()
+            print(cfg)
 
-		else:
-			ts = TransmissionServer( cfg.hostname, cfg.port )
-		
-			if ( opt.add ):
-				view.Add( ts.Add(opt.add) )
+        else:
+            ts = TransmissionServer( cfg.hostname, cfg.port )
+        
+            if ( opt.add ):
+                view.Add( ts.Add(opt.add) )
 
-			if ( opt.remove ):
-				view.Remove( ts.Remove(opt.remove) )
+            if ( opt.remove ):
+                view.Remove( ts.Remove(opt.remove) )
 
-			if ( opt.download ):
-				for root, dirs, files in os.walk(cfg.input_dir):
-					if ( root == path ):
-						for f in files:
-							if ( f.rsplit('.', 1)[1] == 'torrent' ):
-								view.Add( ts.Add(os.path.join(root,f)) )
+            if ( opt.purge ):
+                view.Remove( ts.Remove(opt.purge) )
+                
+            if ( opt.download ):
+                for root, dirs, files in os.walk(cfg.input_dir):
+                    if ( root == cfg.input_dir ):
+                        for f in files:
+                            if ( f.rsplit('.', 1)[1] == 'torrent' ):
+                                view.Add( ts.Add(os.path.join(root,f)) )
 
-			if ( opt.clear ):
-				ts.Clear()
+            if ( opt.clear ):
+                for task in ts.List():
+                    if task._status == "seeding":
+                        view.Remove( ts.Remove(task._id) )
 
-			if ( opt.purge ):
-				ts.Purge()
-				view.Purge()
-				
-			if ( opt.list ):
-				ts.List()
-				view.List()
+            if ( opt.Purge ):
+                for task in ts.List():
+                    view.Purge( ts.Purge(task._id) )
+                
+            if ( opt.list ):
+                view.List( ts.List() )
 
-			if ( opt.version ):
-				ts.version()
-				cfg.display()
+            if ( opt.version ):
+                ts.version()
+                cfg.display()
