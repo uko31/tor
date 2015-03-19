@@ -134,8 +134,11 @@ class ViewCLI:
         self.display = "cli"
         
     def List(self, task_list):
-        for t in task_list:
-            print(t)
+        if task_list:
+            for t in task_list:
+                print(t)
+        else:
+            print("No task queued.")
     
     def Add(self, task):
         print(">> Add download: %s" % (task._name))
