@@ -25,7 +25,7 @@
 #   List(self)
 #   Purge(Self)
 #   Clear(Self)
-#	Version(self)
+#    Version(self)
 
 # class ViewCLI:
 #   __init__(self)
@@ -39,10 +39,10 @@
 #   UpdateList(self, task_list)
 #   Remove(self)
 #   Purge(self)
-#	Clear(self)
-#	PurgeAll(self)
-#	UpdateOptions(self)
-#	Quit(self)
+#    Clear(self)
+#    PurgeAll(self)
+#    UpdateOptions(self)
+#    Quit(self)
 
 # class Configuration:
 #    __init__(self, filename, hostname, port, input_dir, output_dir, ext)
@@ -98,7 +98,7 @@ class TransmissionServer:
             tor  = self._conn.add_torrent("file://%s" % os.path.realpath(filename))
             task = Task(id = tor.id, name = tor.name)
         except transmissionrpc.TransmissionError as e:
-            print("ERROR: Download %s not added (reason: %s)" % (os.path.basename(filename), e.info))
+            print("ERROR: Download %s not added (reason: %s)" % (os.path.basename(filename), e.message))
             return(False)
             
         os.remove(filename)
@@ -122,7 +122,10 @@ class TransmissionServer:
         torrents = self._conn.get_torrents()
         if len(torrents) != 0:
             for torrent in torrents:
-                tasks.append(Task(torrent.id, torrent.status, torrent.progress, torrent.name))
+                tasks.append(Task(id=torrent.id, 
+                                  status=torrent.status, 
+                                  progress=torrent.progress, 
+                                  name=torrent.name))
             return(tasks)
         else:
             return(False)
@@ -159,87 +162,82 @@ class ViewGUI:
     def __init__(self, parent, ts):
         self.version = "gui"
         self.parent = parent
-		self.ts = ts
-		
-		self.InitUI()
-		self.UpdateList(self.ts.List())
-	
-	def InitUI(self):
-		self.top_frame        = Frame(self.parent)
-		self.bottom_frame	  = Frame(self.parent)
-		self.refresh_button   = Button(self.top_frame,    text="Refresh",      command=self.Refresh)
-		self.remove_button    = Button(self.top_frame,    text="Remove",       command=self.Remove)
-		self.purge_button     = Button(self.top_frame,    text="Purge",        command=self.Purge)
-		self.clear_button     = Button(self.top_frame,    text="Clear",        command=self.Clear)
-		self.purgeall_button  = Button(self.top_frame,    text="Purge All",    command=self.PurgeAll)
-		self.selectall_button = Button(self.top_frame,    text = "Select All", command=self.SelectAll)
-		self.options_button   = Button(self.bottom_frame, text="Options",      command=self.UpdateOptions)
-		self.quit_button      = Button(self.bottom_frame, text="Quit",         command=self.Quit)
-		self.tree             = ttk.Treeview(self.parent)
-		
-		self.tree["columns"]=("status", "progress", "name")
-		self.tree.column("#0",       width=50)
-		self.tree.column("status",   width=110)
-		self.tree.column("progress", width=70)
-		self.tree.column("name",     width=350)
-		self.tree.heading("#0",       text="Id")
-		self.tree.heading("status",   text="Status")
-		self.tree.heading("progress", text="%")
-		self.tree.heading("name",     text="Download")
+        self.ts = ts
+        
+        self.InitUI()
+        self.UpdateList()
+    
+    def InitUI(self):
+        self.top_frame        = Frame(self.parent)
+        self.bottom_frame      = Frame(self.parent)
+        self.refresh_button   = Button(self.top_frame,    text="Refresh",      command=self.UpdateList)
+        self.clear_button     = Button(self.top_frame,    text="Clear",        command=self.Clear)
+        self.purge_button     = Button(self.top_frame,    text="Purge",        command=self.Purge)
+        self.purgeall_button  = Button(self.top_frame,    text="Purge All",    command=self.PurgeAll)
+        self.selectall_button = Button(self.top_frame,    text = "Select All", command=self.SelectAll)
+        self.options_button   = Button(self.bottom_frame, text="Options",      command=self.UpdateOptions)
+        self.quit_button      = Button(self.bottom_frame, text="Quit",         command=self.Quit)
+        self.tree             = ttk.Treeview(self.parent)
+        
+        self.tree["columns"]=("status", "progress", "name")
+        self.tree.column("#0",       width=50)
+        self.tree.column("status",   width=110)
+        self.tree.column("progress", width=70)
+        self.tree.column("name",     width=350)
+        self.tree.heading("#0",       text="Id")
+        self.tree.heading("status",   text="Status")
+        self.tree.heading("progress", text="%")
+        self.tree.heading("name",     text="Download")
 
-		self.top_frame.grid   (row=0, column=0)
-		self.tree.grid        (row=1, column=0)
-		self.bottom_frame.grid(row=2, column=0)
-		
-		self.refresh_button.grid  (row=0, column=0)
-		self.remove_button.grid   (row=0, column=1)
-		self.clear_button.grid    (row=0, column=2)
-		self.purge_button.grid    (row=0, column=3)
-		self.purgeall_button.grid (row=0, column=4)
-		self.selectall_button.grid(row=0, column=5)
-		
-		self.options_button.grid(row=0, column=0)
-		self.quit_button.grid   (row=0, column=1)
+        self.top_frame.grid   (row=0, column=0)
+        self.tree.grid        (row=1, column=0)
+        self.bottom_frame.grid(row=2, column=0)
+        
+        self.refresh_button.grid  (row=0, column=0)
+        self.clear_button.grid    (row=0, column=1)
+        self.purge_button.grid    (row=0, column=2)
+        self.purgeall_button.grid (row=0, column=3)
+        self.selectall_button.grid(row=0, column=4)
+        
+        self.options_button.grid(row=0, column=0)
+        self.quit_button.grid   (row=0, column=1)
 
-    def UpdateList(self, task_list):
-		if task_list:
-			for task in task_list:
-				self.tree.insert("", "end", task._id, task._status, task._progress, task._name))
+    def UpdateList(self):
+        for item in self.tree.get_children():
+            self.tree.delete(item)
+            
+        task_list = self.ts.List()
+        if task_list:
+            for task in task_list:
+                self.tree.insert("", 
+                                 "end", 
+                                 text=task._id, 
+                                 values=(task._status, "%3.2f" % task._progress, task._name))
 
-	def SelectAll(self):
-		item = "I001"
-		if self.tree.exists(item):
-			while self.tree.next(item) != '':
-				self.tree.selection_add(item)
-				item = self.tree.next(item)
-				self.tree.selection_add(item)			
+    def SelectAll(self):
+        for item in self.tree.get_children():
+            self.tree.selection_add(item)
+        
+    def Purge(self):
+        for item in self.tree.selection():
+            self.ts.Purge(self.tree.item(item)["text"])
+            self.tree.delete(item)
 
-    def Remove(self, task):
-		for item in self.tree.selection():
-			# print("Delete item: %s (id = item(%s))" % (item, self.tree.item(item)["text"]))
-			self.tree.delete(item)
-			self.ts.Remove(item["value"]["id"])
+    def PurgeAll(self):
+        self.SelectAll()
+        self.Purge()
 
-    def Purge(self, task):
-		for item in self.tree.selection():
-			# print("Delete item: %s (id = item(%s))" % (item, self.tree.item(item)["text"]))
-			self.tree.delete(item)
-			self.ts.Purge(item["value"]["id"])
-
-	def Clear(self):
-		for item in self.tree.selection():
-			self.tree.delete(item)
-			self.ts.Remove(item["value"]["id"])
-	
-	def PurgeALl(self):
-		return(True)
-		
-	def UpdateOptions(self):
-		return(True)
-		
-	def Quit(self):
-		return(True)
-		
+    def Clear(self):
+        for item in self.tree.selection():
+            self.ts.Remove(self.tree.item(item)["text"])
+            self.tree.delete(item)
+        
+    def UpdateOptions(self):
+        return(True)
+        
+    def Quit(self):
+        return(True)
+        
 class Configuration:
     def __init__(self, filename, 
                  hostname   = "nas", 
@@ -343,9 +341,10 @@ if __name__ == "__main__":
     
     # graphic mode
     if opt.gui:
+        ts = TransmissionServer( cfg.hostname, cfg.port )
         TorGUI = Tk()
         TorGUI.title("Tor - the GUI")
-        ViewGUI(TorGUI)
+        ViewGUI(TorGUI, ts)
         TorGUI.mainloop()
     
     # cli mode
@@ -379,8 +378,10 @@ if __name__ == "__main__":
             ts = TransmissionServer( cfg.hostname, cfg.port )
         
             if ( opt.add ):
-                view.Add( ts.Add(opt.add) )
-
+                t = ts.Add(opt.add)
+                if t:
+                    view.Add(t)
+                    
             if ( opt.remove ):
                 view.Remove( ts.Remove(opt.remove) )
 
@@ -392,7 +393,8 @@ if __name__ == "__main__":
                     if ( root == cfg.input_dir ):
                         for f in files:
                             if ( f.rsplit('.', 1)[1] == 'torrent' ):
-                                view.Add( ts.Add(os.path.join(root,f)) )
+                                t = ts.Add(os.path.join(root,f))
+                                if t: view.Add(t)
 
             if ( opt.clear ):
                 for task in ts.List():
