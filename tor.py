@@ -1,8 +1,8 @@
 #!/usr/bin/python
 
-# Author : m.gregoriades@gmail.com
-# Date   : Feb. 2015
-# Version: 0.2
+# Author  : Uko31 at github dot com
+# Date    : Feb. 2015
+# Version : 0.2
 
 # classes description:
 # - - - - - - - - - - 
@@ -25,7 +25,7 @@
 #   List(self)
 #   Purge(Self)
 #   Clear(Self)
-#    Version(self)
+#   Version(self)
 
 # class ViewCLI:
 #   __init__(self)
@@ -35,24 +35,29 @@
 #   Purge(self, task)
 
 # class ViewGUI:
-#   __init__(self)
+#   __init__(self, ts, cfg)
 #   UpdateList(self, task_list)
 #   Remove(self)
 #   Purge(self)
-#    Clear(self)
-#    PurgeAll(self)
-#    UpdateOptions(self)
-#    Quit(self)
+#   Clear(self)
+#   PurgeAll(self)
+#   UpdateOptions(self)
+#   ProcessOptions(self)
 
 # class Configuration:
-#    __init__(self, filename, hostname, port, input_dir, output_dir, ext)
-#    Update(self)
-#    __str__(self)
+#   _hostname
+#   _port
+#   _input_dir
+#   _output_dir
+#   _ext
+#   __init__(self, filename, hostname, port, input_dir, output_dir, ext)
+#   Update(self)
+#   __str__(self)
 
 # class Options:
-#    __init__(self)
-#    ParseArgs(self)
-#    __str__(self)
+#   __init__(self)
+#   ParseArgs(self)
+#   __str__(self)
 
 # required modules:
 # - - - - - - - - -
@@ -169,15 +174,24 @@ class ViewGUI:
         # self.UpdateList()
     
     def InitUI(self):
-        self.top_frame        = Frame(self.parent)
-        self.bottom_frame      = Frame(self.parent)
-        self.refresh_button   = Button(self.top_frame,    text="Refresh",      command=self.UpdateList)
-        self.clear_button     = Button(self.top_frame,    text="Clear",        command=self.Clear)
-        self.purge_button     = Button(self.top_frame,    text="Purge",        command=self.Purge)
-        self.purgeall_button  = Button(self.top_frame,    text="Purge All",    command=self.PurgeAll)
-        self.selectall_button = Button(self.top_frame,    text = "Select All", command=self.SelectAll)
-        self.options_button   = Button(self.bottom_frame, text="Options",      command=self.UpdateOptions)
-        self.quit_button      = Button(self.bottom_frame, text="Quit",         command=quit)
+        self.top_frame    = Frame(self.parent)
+        self.bottom_frame = Frame(self.parent)
+        
+        self.refreshImage = PhotoImage(file = "refresh.gif",       width=32, height=32)
+        self.exitImage    = PhotoImage(file = "exit.gif",          width=32, height=32)
+        self.garbageImage = PhotoImage(file = "garbage.gif",       width=45, height=32)
+        self.trashImage   = PhotoImage(file = "trash.gif",         width=32, height=32)
+        self.setupImage   = PhotoImage(file = "setup-options.gif", width=32, height=32)
+        self.clearImage   = PhotoImage(file = "clear-icon.gif",    width=32, height=32)
+        self.selectImage  = PhotoImage(file = "select-all.gif",    width=32, height=32)
+        
+        self.refresh_button   = Button(self.top_frame,    text="Refresh",      command=self.UpdateList,    image = self.refreshImage)
+        self.clear_button     = Button(self.top_frame,    text="Clear",        command=self.Clear,         image = self.clearImage)
+        self.purge_button     = Button(self.top_frame,    text="Purge",        command=self.Purge,         image = self.trashImage)
+        self.purgeall_button  = Button(self.top_frame,    text="Purge All",    command=self.PurgeAll,      image = self.garbageImage)
+        self.selectall_button = Button(self.top_frame,    text = "Select All", command=self.SelectAll,     image = self.selectImage)
+        self.options_button   = Button(self.bottom_frame, text="Options",      command=self.UpdateOptions, image = self.setupImage)
+        self.quit_button      = Button(self.bottom_frame, text="Quit",         command=quit,               image = self.exitImage)
         self.tree             = ttk.Treeview(self.parent)
         
         self.tree["columns"]=("status", "progress", "name")
