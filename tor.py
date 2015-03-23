@@ -60,7 +60,7 @@ import argparse
 import json
 import os
 import os.path
-import transmissionrpc
+# import transmissionrpc
 import datetime
 from tkinter import *
 from tkinter import ttk
@@ -68,8 +68,8 @@ from tkinter import ttk
 # constants:
 # - - - - - 
 __VERSION__ = "0.2.0"
-__CONFIG_FILE__ = os.getenv("HOME")+"/.config/tor/config.json"
-#__CONFIG_FILE__ = ".\\config.json"
+# __CONFIG_FILE__ = os.getenv("HOME")+"/.config/tor/config.json"
+__CONFIG_FILE__ = ".\\config.json"
 
 # code:
 # - - -
@@ -159,13 +159,14 @@ class ViewCLI:
         return(True)
 
 class ViewGUI:
-    def __init__(self, parent, ts):
+    def __init__(self, parent, ts, cfg):
         self.version = "gui"
         self.parent = parent
-        self.ts = ts
+        self.ts  = ts
+        self.cfg = cfg
         
         self.InitUI()
-        self.UpdateList()
+        # self.UpdateList()
     
     def InitUI(self):
         self.top_frame        = Frame(self.parent)
@@ -176,7 +177,7 @@ class ViewGUI:
         self.purgeall_button  = Button(self.top_frame,    text="Purge All",    command=self.PurgeAll)
         self.selectall_button = Button(self.top_frame,    text = "Select All", command=self.SelectAll)
         self.options_button   = Button(self.bottom_frame, text="Options",      command=self.UpdateOptions)
-        self.quit_button      = Button(self.bottom_frame, text="Quit",         command=self.Quit)
+        self.quit_button      = Button(self.bottom_frame, text="Quit",         command=quit)
         self.tree             = ttk.Treeview(self.parent)
         
         self.tree["columns"]=("status", "progress", "name")
@@ -233,10 +234,53 @@ class ViewGUI:
             self.tree.delete(item)
         
     def UpdateOptions(self):
-        return(True)
+        self.updateInput    = StringVar()
+        self.updateOutput   = StringVar()
+        self.updateHostname = StringVar()
+        self.updatePort     = StringVar()
+        self.updateExt      = StringVar()
+
+        self.updateInput.set(self.cfg._input_dir)
+        self.updateOutput.set(self.cfg._output_dir)
+        self.updateHostname.set(self.cfg._hostname)
+        self.updatePort.set(self.cfg._port)
+        self.updateExt.set(self.cfg._ext)
+    
+        options = Toplevel()
+        inputLabel    = Label (options, text = "Input Directory:")
+        outputLabel   = Label (options, text = "Output Directory:")
+        hostnameLabel = Label (options, text = "Hostname:")
+        portLabel     = Label (options, text = "Port:")
+        extLabel      = Label (options, text = "Extensions:")
+
+        inputEntry    = Entry (options, textvariable = self.updateInput) 
+        outputEntry   = Entry (options, textvariable = self.updateOutput)
+        hostnameEntry = Entry (options, textvariable = self.updateHostname)
+        portEntry     = Entry (options, textvariable = self.updatePort)
+        extEntry      = Entry (options, textvariable = self.updateExt)
+        okButton      = Button(options, text = "Ok", command=self.ProcessOptions)
         
-    def Quit(self):
-        return(True)
+        inputLabel.   grid(row = 0, column = 0)
+        outputLabel.  grid(row = 1, column = 0)
+        hostnameLabel.grid(row = 2, column = 0)
+        portLabel.    grid(row = 3, column = 0)
+        extLabel.     grid(row = 4, column = 0)
+        
+        inputEntry.   grid(row = 0, column = 1)
+        outputEntry.  grid(row = 1, column = 1)
+        hostnameEntry.grid(row = 2, column = 1)
+        portEntry.    grid(row = 3, column = 1)
+        extEntry.     grid(row = 4, column = 1)
+        
+        okButton.     grid(row = 5, column = 1)
+       
+    def ProcessOptions(self):
+        self.cfg._input_dir  = self.updateInput.get()
+        self.cfg._output_dir = self.updateOutput.get()
+        self.cfg._hostname   = self.updateHostname.get()
+        self.cfg._port       = self.updatePort.get()
+        self.cfg._ext        = self.updateExt.get()
+        self.cfg.Update()
         
 class Configuration:
     def __init__(self, filename, 
@@ -257,7 +301,7 @@ class Configuration:
             try:
                 fd = open(self._filename, "r")
                 for key, value in dict(json.load(fd)).items():
-                    setattr(self, key, value)
+                    setattr(self, "_%s" % key, value)
                 fd.close()
             except IOError as e:
                 print("ERROR while tryin to open [%s]" % (e.info, self._filename))
@@ -341,10 +385,11 @@ if __name__ == "__main__":
     
     # graphic mode
     if opt.gui:
-        ts = TransmissionServer( cfg.hostname, cfg.port )
+        # ts = TransmissionServer( cfg.hostname, cfg.port )
+        ts = "toto"
         TorGUI = Tk()
         TorGUI.title("Tor - the GUI")
-        ViewGUI(TorGUI, ts)
+        ViewGUI(TorGUI, ts, cfg)
         TorGUI.mainloop()
     
     # cli mode
@@ -392,7 +437,7 @@ if __name__ == "__main__":
                 for root, dirs, files in os.walk(cfg.input_dir):
                     if ( root == cfg.input_dir ):
                         for f in files:
-                            if ( f.rsplit('.', 1)[1] == 'torrent' ):
+                            if ( f.rsplit('.', 1)[1] == 'torrent' ): # faire en sorte de prendre en compte cfg.ext + choix multiples
                                 t = ts.Add(os.path.join(root,f))
                                 if t: view.Add(t)
 
