@@ -65,7 +65,7 @@ import argparse
 import json
 import os
 import os.path
-# import transmissionrpc
+import transmissionrpc
 import datetime
 from tkinter import *
 from tkinter import ttk
@@ -73,8 +73,8 @@ from tkinter import ttk
 # constants:
 # - - - - - 
 __VERSION__ = "0.2.0"
-# __CONFIG_FILE__ = os.getenv("HOME")+"/.config/tor/config.json"
-__CONFIG_FILE__ = ".\\config.json"
+__CONFIG_FILE__ = os.getenv("HOME")+"/.config/tor/config.json"
+# __CONFIG_FILE__ = ".\\config.json"
 
 # code:
 # - - -
@@ -399,8 +399,8 @@ if __name__ == "__main__":
     
     # graphic mode
     if opt.gui:
-        # ts = TransmissionServer( cfg.hostname, cfg.port )
-        ts = "toto"
+        ts = TransmissionServer( cfg._hostname, cfg._port )
+        # ts = "toto"
         TorGUI = Tk()
         TorGUI.title("Tor - the GUI")
         ViewGUI(TorGUI, ts, cfg)
@@ -434,7 +434,7 @@ if __name__ == "__main__":
             print(cfg)
 
         else:
-            ts = TransmissionServer( cfg.hostname, cfg.port )
+            ts = TransmissionServer( cfg._hostname, cfg._port )
         
             if ( opt.add ):
                 t = ts.Add(opt.add)
