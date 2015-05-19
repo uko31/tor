@@ -68,14 +68,19 @@ import json
 import os
 import os.path
 import datetime
+import time
+import threading
+
 from tkinter import *
 from tkinter import ttk
+
 if sys.platform != "win32":
     import transmissionrpc
 
 # constants:
 # - - - - - 
 __VERSION__ = "0.2.0"
+__DELAY__   = 2
 if   sys.platform == "linux2":
     __CONFIG_FILE__ = os.getenv("HOME")+"/.config/tor/config.json"
 elif sys.platform == "win32":
@@ -167,6 +172,19 @@ class ViewCLI:
         print(">> Purge download: %d - %s" % (task._id, task._name))
         return(True)
 
+class UploadThread(threading.Thread):
+    def __init__(self, parent, delay):
+        threading.Thread.__init__(self)
+        self.parent = parent
+        self.go = True
+        self.delay = delay
+        
+    def run(self):
+        while self.go:
+            self.parent.UpdateList()
+            time.sleep(self.delay)
+        
+        
 class ViewGUI:
     def __init__(self, parent, ts, cfg):
         self.version = "gui"
@@ -175,8 +193,8 @@ class ViewGUI:
         self.cfg = cfg
         
         self.InitUI()
-        # if sys.platform != "win32":
-        self.UpdateList()
+        self.thread = UploadThread(self, __DELAY__)
+        self.thread.start()
     
     def InitUI(self):
         self.top_frame    = Frame(self.parent)
@@ -190,13 +208,13 @@ class ViewGUI:
         #self.clearImage   = PhotoImage(file = "clear-icon.gif",    width=32, height=32)
         #self.selectImage  = PhotoImage(file = "select-all.gif",    width=32, height=32)
         
-        self.refresh_button   = Button(self.top_frame,    text="Refresh",      command=self.UpdateList)#,    image = self.refreshImage)
-        self.clear_button     = Button(self.top_frame,    text="Clear",        command=self.Clear)#,         image = self.clearImage)
-        self.purge_button     = Button(self.top_frame,    text="Purge",        command=self.Purge)#,         image = self.trashImage)
-        self.purgeall_button  = Button(self.top_frame,    text="Purge All",    command=self.PurgeAll)#,      image = self.garbageImage)
-        self.selectall_button = Button(self.top_frame,    text = "Select All", command=self.SelectAll)#,     image = self.selectImage)
-        self.options_button   = Button(self.bottom_frame, text="Options",      command=self.UpdateOptions)#, image = self.setupImage)
-        self.quit_button      = Button(self.bottom_frame, text="Quit",         command=quit)#,               image = self.exitImage)
+        self.refresh_button   = Button(self.top_frame,    text="Refresh",    command=self.UpdateList)#,    image = self.refreshImage)
+        self.clear_button     = Button(self.top_frame,    text="Clear",      command=self.Clear)#,         image = self.clearImage)
+        self.purge_button     = Button(self.top_frame,    text="Purge",      command=self.Purge)#,         image = self.trashImage)
+        self.purgeall_button  = Button(self.top_frame,    text="Purge All",  command=self.PurgeAll)#,      image = self.garbageImage)
+        self.selectall_button = Button(self.top_frame,    text="Select All", command=self.SelectAll)#,     image = self.selectImage)
+        self.options_button   = Button(self.bottom_frame, text="Options",    command=self.UpdateOptions)#, image = self.setupImage)
+        self.quit_button      = Button(self.bottom_frame, text="Quit",       command=self.Quit)#,               image = self.exitImage)
         self.tree             = ttk.Treeview(self.parent)
         
         self.tree["columns"]=("status", "progress", "name")
@@ -321,6 +339,10 @@ class ViewGUI:
         self.cfg._port       = self.updatePort.get()
         self.cfg._ext        = self.updateExt.get()
         self.cfg.Update()
+        
+    def Quit(self):
+        self.thread.go = False
+        self.parent.destroy()
         
 class Configuration:
     def __init__(self, filename, 
