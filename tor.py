@@ -61,20 +61,25 @@
 
 # required modules:
 # - - - - - - - - -
+
+import sys
 import argparse
 import json
 import os
 import os.path
-import transmissionrpc
 import datetime
 from tkinter import *
 from tkinter import ttk
+if sys.platform != "win32":
+    import transmissionrpc
 
 # constants:
 # - - - - - 
 __VERSION__ = "0.2.0"
-__CONFIG_FILE__ = os.getenv("HOME")+"/.config/tor/config.json"
-# __CONFIG_FILE__ = ".\\config.json"
+if   sys.platform == "linux2":
+    __CONFIG_FILE__ = os.getenv("HOME")+"/.config/tor/config.json"
+elif sys.platform == "win32":
+    __CONFIG_FILE__ = ".\\config.json"
 
 # code:
 # - - -
@@ -82,7 +87,7 @@ class Task:
     def __init__(self, id, name, status = None, progress = 0):
         self._id       = id
         self._status   = status
-        self._progress = progress
+        self._progress = float(progress)
         self._name     = name
 
     def __str__(self):
@@ -123,7 +128,7 @@ class TransmissionServer:
     
     def List(self):
         tasks = list()
-
+        
         torrents = self._conn.get_torrents()
         if len(torrents) != 0:
             for torrent in torrents:
@@ -131,9 +136,8 @@ class TransmissionServer:
                                   status=torrent.status, 
                                   progress=torrent.progress, 
                                   name=torrent.name))
-            return(tasks)
-        else:
-            return(False)
+
+        return(tasks)
 
     def Version(self):
         return("version: %s", __VERSION__)
@@ -171,7 +175,8 @@ class ViewGUI:
         self.cfg = cfg
         
         self.InitUI()
-        # self.UpdateList()
+        # if sys.platform != "win32":
+        self.UpdateList()
     
     def InitUI(self):
         self.top_frame    = Frame(self.parent)
@@ -203,6 +208,12 @@ class ViewGUI:
         self.tree.heading("status",   text="Status")
         self.tree.heading("progress", text="%")
         self.tree.heading("name",     text="Download")
+        self.tree.tag_configure("grey",        background="#CCCCCC")
+        self.tree.tag_configure("white",       background="#EEEEEE")
+        self.tree.tag_configure("Downloading", foreground="#104e8b")
+        self.tree.tag_configure("Seeding",     foreground="#458b00")
+        self.tree.tag_configure("waiting",     foreground="#1a1a1a")
+        self.tree.tag_configure("Error",       foreground="#8b4500")
 
         self.top_frame.grid   (row=0, column=0)
         self.tree.grid        (row=1, column=0)
@@ -221,13 +232,28 @@ class ViewGUI:
         for item in self.tree.get_children():
             self.tree.delete(item)
             
-        task_list = self.ts.List()
+        if sys.platform != "win32":
+            task_list = self.ts.List()
+        else:
+            task_list = list()
+            task_list.append(Task(id=1, status="Downloading", progress="50",  name="My first download"))
+            task_list.append(Task(id=2, status="Seeding",     progress="100", name="My second download"))
+            task_list.append(Task(id=3, status="Seeding",     progress="100", name="My third download"))
+            task_list.append(Task(id=4, status="Waiting",     progress="0",   name="My fourth download"))
+            task_list.append(Task(id=5, status="Error",       progress="3",   name="My fifth download"))
+        
         if task_list:
+            i=0
+            background=("grey", "white")
             for task in task_list:
+                tag, i = list(), i+1
+                tag.append(background[i % 2])
+                tag.append(task._status)                    
                 self.tree.insert("", 
                                  "end", 
                                  text=task._id, 
-                                 values=(task._status, "%3.2f" % task._progress, task._name))
+                                 values=(task._status, "%3.2f" % task._progress, task._name),
+                                 tags=(tag))
 
     def SelectAll(self):
         for item in self.tree.get_children():
@@ -399,8 +425,11 @@ if __name__ == "__main__":
     
     # graphic mode
     if opt.gui:
-        ts = TransmissionServer( cfg._hostname, cfg._port )
-        # ts = "toto"
+        if sys.platform != "win32":
+            ts = TransmissionServer( cfg._hostname, cfg._port )
+        else:
+            ts = None 
+
         TorGUI = Tk()
         TorGUI.title("Tor - the GUI")
         ViewGUI(TorGUI, ts, cfg)
@@ -434,7 +463,8 @@ if __name__ == "__main__":
             print(cfg)
 
         else:
-            ts = TransmissionServer( cfg._hostname, cfg._port )
+            if sys.platform != "win32":
+                ts = TransmissionServer( cfg._hostname, cfg._port )
         
             if ( opt.add ):
                 t = ts.Add(opt.add)
