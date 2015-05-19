@@ -81,7 +81,7 @@ if sys.platform != "win32":
 # - - - - - 
 __VERSION__ = "0.2.0"
 __DELAY__   = 2
-if   sys.platform == "linux2":
+if   sys.platform == "linux":
     __CONFIG_FILE__ = os.getenv("HOME")+"/.config/tor/config.json"
 elif sys.platform == "win32":
     __CONFIG_FILE__ = ".\\config.json"
@@ -121,13 +121,13 @@ class TransmissionServer:
 
     def Remove(self, id):
         tor = self._conn.get_torrent(id)
-        task = Task(tor.id, tor.status, tor.progress, tor.name)
+        task = Task(id=tor.id, status=tor.status, progress=tor.progress, name=tor.name)
         self._conn.remove_torrent(id)
         return(task)
 
     def Purge(self, id):
         tor = self._conn.get_torrent(id)
-        task = Task(tor.id, tor.status, tor.progress, tor.name)
+        task = Task(id=tor.id, status=tor.status, progress=tor.progress, name=tor.name)
         self._conn.remove_torrent(id, delete_data=True)
         return(task)
     
@@ -247,9 +247,6 @@ class ViewGUI:
         self.quit_button.grid   (row=0, column=1)
 
     def UpdateList(self):
-        for item in self.tree.get_children():
-            self.tree.delete(item)
-            
         if sys.platform != "win32":
             task_list = self.ts.List()
         else:
@@ -260,18 +257,28 @@ class ViewGUI:
             task_list.append(Task(id=4, status="stopped",     progress="0",   name="My fourth download"))
             task_list.append(Task(id=5, status="checking",    progress="3",   name="My fifth download"))
         
+        for item in self.tree.get_children():
+            self.tree.delete(item)
+            
         if task_list:
             i=0
             background=("grey", "white")
             for task in task_list:
                 tag, i = list(), i+1
-                tag.append(background[i % 2])
-                tag.append(task._status)                    
-                self.tree.insert("", 
-                                 "end", 
-                                 text=task._id, 
-                                 values=(task._status, "%3.2f" % task._progress, task._name),
-                                 tags=(tag))
+                tag.append(background[i%2])
+                tag.append(task._status)
+                if not self.tree.exists(task._id):
+                    self.tree.insert(parent="",
+                                    index="end",
+                                    iid=task._id,
+                                    text=task._id, 
+                                    values=(task._status, "%3.2f" % task._progress, task._name),
+                                    tags=(tag))
+                else:
+                    self.tree.item(item=task._id,
+                                   text=task._id, 
+                                   values=(task._status, "%3.2f" % task._progress, task._name),
+                                   tags=(tag))
 
     def SelectAll(self):
         for item in self.tree.get_children():
@@ -279,7 +286,7 @@ class ViewGUI:
         
     def Purge(self):
         for item in self.tree.selection():
-            self.ts.Purge(self.tree.item(item)["text"])
+            self.ts.Purge(item)
             self.tree.delete(item)
 
     def PurgeAll(self):
@@ -288,7 +295,7 @@ class ViewGUI:
 
     def Clear(self):
         for item in self.tree.selection():
-            self.ts.Remove(self.tree.item(item)["text"])
+            self.ts.Remove(item)
             self.tree.delete(item)
         
     def UpdateOptions(self):
