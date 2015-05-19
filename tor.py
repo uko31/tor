@@ -210,10 +210,10 @@ class ViewGUI:
         self.tree.heading("name",     text="Download")
         self.tree.tag_configure("grey",        background="#CCCCCC")
         self.tree.tag_configure("white",       background="#EEEEEE")
-        self.tree.tag_configure("Downloading", foreground="#104e8b")
-        self.tree.tag_configure("Seeding",     foreground="#458b00")
-        self.tree.tag_configure("waiting",     foreground="#1a1a1a")
-        self.tree.tag_configure("Error",       foreground="#8b4500")
+        self.tree.tag_configure("downloading", foreground="#104e8b")
+        self.tree.tag_configure("seeding",     foreground="#458b00")
+        self.tree.tag_configure("stopped",     foreground="#1a1a1a")
+        self.tree.tag_configure("checking",    foreground="#8b4500")
 
         self.top_frame.grid   (row=0, column=0)
         self.tree.grid        (row=1, column=0)
@@ -236,11 +236,11 @@ class ViewGUI:
             task_list = self.ts.List()
         else:
             task_list = list()
-            task_list.append(Task(id=1, status="Downloading", progress="50",  name="My first download"))
-            task_list.append(Task(id=2, status="Seeding",     progress="100", name="My second download"))
-            task_list.append(Task(id=3, status="Seeding",     progress="100", name="My third download"))
-            task_list.append(Task(id=4, status="Waiting",     progress="0",   name="My fourth download"))
-            task_list.append(Task(id=5, status="Error",       progress="3",   name="My fifth download"))
+            task_list.append(Task(id=1, status="downloading", progress="50",  name="My first download"))
+            task_list.append(Task(id=2, status="seeding",     progress="100", name="My second download"))
+            task_list.append(Task(id=3, status="seeding",     progress="100", name="My third download"))
+            task_list.append(Task(id=4, status="stopped",     progress="0",   name="My fourth download"))
+            task_list.append(Task(id=5, status="checking",    progress="3",   name="My fifth download"))
         
         if task_list:
             i=0
