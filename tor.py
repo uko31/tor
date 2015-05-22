@@ -233,18 +233,18 @@ class ViewGUI:
         self.tree.tag_configure("stopped",     foreground="#1a1a1a")
         self.tree.tag_configure("checking",    foreground="#8b4500")
 
-        self.top_frame.grid   (row=0, column=0)
+        self.top_frame.grid   (row=0, column=0, sticky=W)
         self.tree.grid        (row=1, column=0)
-        self.bottom_frame.grid(row=2, column=0)
+        self.bottom_frame.grid(row=2, column=0, sticky=E)
         
-        self.refresh_button.grid  (row=0, column=0)
-        self.clear_button.grid    (row=0, column=1)
-        self.purge_button.grid    (row=0, column=2)
-        self.purgeall_button.grid (row=0, column=3)
-        self.selectall_button.grid(row=0, column=4)
+        self.refresh_button.grid  (row=0, column=0, padx=2, pady=2)
+        self.clear_button.grid    (row=0, column=1, padx=2, pady=2)
+        self.purge_button.grid    (row=0, column=2, padx=2, pady=2)
+        self.purgeall_button.grid (row=0, column=3, padx=2, pady=2)
+        self.selectall_button.grid(row=0, column=4, padx=2, pady=2)
         
-        self.options_button.grid(row=0, column=0)
-        self.quit_button.grid   (row=0, column=1)
+        self.options_button.grid(row=0, column=0, padx=2, pady=2)
+        self.quit_button.grid   (row=0, column=1, padx=2, pady=2)
 
     def UpdateList(self):
         if sys.platform != "win32":
@@ -265,6 +265,7 @@ class ViewGUI:
                 tag.append(background[i%2])
                 tag.append(task._status)
                 if (not self.tree.exists(item=task._id)):
+                    # si l'item n'existe pas on le crée avec l'iid = task._id
                     self.tree.insert(parent="",
                                     index="end",
                                     iid=task._id,
@@ -272,6 +273,7 @@ class ViewGUI:
                                     values=(task._status, "%3.2f" % task._progress, task._name),
                                     tags=(tag))
                 else:
+                    # on récupère les valeurs de l'item, si le status et la progression sont inchangées on ne fait rien:
                     item = self.tree.item(item=task._id)
                     if ( task._status != item["values"][0] or float(task._progress) != float(item["values"][1]) ):
                         self.tree.item(item=task._id,
