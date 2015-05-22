@@ -172,7 +172,7 @@ class ViewCLI:
         print(">> Purge download: %d - %s" % (task._id, task._name))
         return(True)
 
-class UploadThread(threading.Thread):
+class UpdateThread(threading.Thread):
     def __init__(self, parent, delay):
         threading.Thread.__init__(self)
         self.parent = parent
@@ -193,7 +193,7 @@ class ViewGUI:
         self.cfg = cfg
         
         self.InitUI()
-        self.thread = UploadThread(self, __DELAY__)
+        self.thread = UpdateThread(self, __DELAY__)
         self.thread.start()
     
     def InitUI(self):
@@ -216,7 +216,10 @@ class ViewGUI:
         self.options_button   = Button(self.bottom_frame, text="Options",    width=8, command=self.UpdateOptions)#, image = self.setupImage)
         self.quit_button      = Button(self.bottom_frame, text="Quit",       width=8, command=self.Quit)#,               image = self.exitImage)
         self.tree             = ttk.Treeview(self.parent)
+        self.v_scroll_tree    = ttk.Scrollbar(self.parent, orient='vertical', command=self.tree.yview)
+        self.h_scroll_tree    = ttk.Scrollbar(self.parent, orient='horizontal', command=self.tree.xview)
         
+        self.tree.configure(yscroll=self.v_scroll_tree.set, xscroll=self.h_scroll_tree.set)
         self.tree["columns"]=("status", "progress", "name")
         self.tree.column("#0",       width=50)
         self.tree.column("status",   width=110)
@@ -233,9 +236,11 @@ class ViewGUI:
         self.tree.tag_configure("stopped",     foreground="#1a1a1a")
         self.tree.tag_configure("checking",    foreground="#8b4500")
 
-        self.top_frame.grid   (row=0, column=0, sticky=W)
-        self.tree.grid        (row=1, column=0)
-        self.bottom_frame.grid(row=2, column=0, sticky=E)
+        self.top_frame.grid    (row=0, column=0, sticky=W)
+        self.tree.grid         (row=1, column=0)
+        self.v_scroll_tree.grid(row=1, column=1, sticky='ns')
+        self.h_scroll_tree.grid(row=2, column=0, sticky='ew')
+        self.bottom_frame.grid (row=3, column=0, sticky=E)
         
         self.refresh_button.grid  (row=0, column=0, padx=2, pady=2)
         self.clear_button.grid    (row=0, column=1, padx=2, pady=2)
