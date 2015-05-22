@@ -257,8 +257,8 @@ class ViewGUI:
             task_list.append(Task(id=4, status="stopped",     progress="0",   name="My fourth download"))
             task_list.append(Task(id=5, status="checking",    progress="3",   name="My fifth download"))
         
-        for item in self.tree.get_children():
-            self.tree.delete(item)
+        # for item in self.tree.get_children():
+            # self.tree.delete(item)
             
         if task_list:
             i=0
@@ -267,7 +267,7 @@ class ViewGUI:
                 tag, i = list(), i+1
                 tag.append(background[i%2])
                 tag.append(task._status)
-                if not self.tree.exists(task._id):
+                if (not self.tree.exists(item=task._id)):
                     self.tree.insert(parent="",
                                     index="end",
                                     iid=task._id,
@@ -275,10 +275,12 @@ class ViewGUI:
                                     values=(task._status, "%3.2f" % task._progress, task._name),
                                     tags=(tag))
                 else:
-                    self.tree.item(item=task._id,
-                                   text=task._id, 
-                                   values=(task._status, "%3.2f" % task._progress, task._name),
-                                   tags=(tag))
+                    item = self.tree.item(item=task._id)
+                    if ( task._status != item["values"][0] or float(task._progress) != float(item["values"][1]) ):
+                        self.tree.item(item=task._id,
+                                       text=task._id, 
+                                       values=(task._status, "%3.2f" % task._progress, task._name),
+                                       tags=(tag))
 
     def SelectAll(self):
         for item in self.tree.get_children():
