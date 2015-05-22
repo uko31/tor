@@ -192,9 +192,36 @@ class ViewGUI:
         self.ts  = ts
         self.cfg = cfg
         
+        self.InitMenu()
         self.InitUI()
         self.thread = UpdateThread(self, __DELAY__)
         self.thread.start()
+    
+    def InitMenu(self):
+        self.context_menu = Menu(self.parent, tearoff=0)
+        self.context_menu.add_command(label="Clear", command=self.ClearCurrent)
+        self.context_menu.add_command(label="Purge", command=self.PurgeCurrent)
+    
+    def popup(self, event):
+        item = self.tree.item(self.tree.identify("item", event.x, event.y))
+        if item["text"] != "":
+            self.context_menu.post(event.x_root, event.y_root)
+            print("item: %s" % item["text"])
+            self.current_item = item["text"]
+        else:
+            self.context_menu.unpost()
+            
+    def ClearCurrent(self):
+        #logging.info("Clear current item [%d]" % self.current_item)
+        if sys.platform != "win32":
+            self.ts.Remove(self.current_item)
+        self.tree.delete(self.current_item)
+
+    def PurgeCurrent(self):
+        #logging.info("Purge current item [%d]" % self.current_item)
+        if sys.platform != "win32":
+            self.ts.Purge(self.current_item)
+        self.tree.delete(self.current_item)
     
     def InitUI(self):
         self.top_frame    = Frame(self.parent)
@@ -236,6 +263,8 @@ class ViewGUI:
         self.tree.tag_configure("stopped",     foreground="#1a1a1a")
         self.tree.tag_configure("checking",    foreground="#8b4500")
 
+        self.tree.bind("<Button-3>", self.popup)
+        
         self.top_frame.grid    (row=0, column=0, sticky=W)
         self.tree.grid         (row=1, column=0)
         self.v_scroll_tree.grid(row=1, column=1, sticky='ns')
