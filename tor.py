@@ -257,9 +257,6 @@ class ViewGUI:
             task_list.append(Task(id=4, status="stopped",     progress="0",   name="My fourth download"))
             task_list.append(Task(id=5, status="checking",    progress="3",   name="My fifth download"))
         
-        # for item in self.tree.get_children():
-            # self.tree.delete(item)
-            
         if task_list:
             i=0
             background=("grey", "white")
@@ -288,7 +285,8 @@ class ViewGUI:
         
     def Purge(self):
         for item in self.tree.selection():
-            self.ts.Purge(item)
+            if sys.platform != "win32":
+                self.ts.Purge(item)
             self.tree.delete(item)
 
     def PurgeAll(self):
@@ -297,7 +295,8 @@ class ViewGUI:
 
     def Clear(self):
         for item in self.tree.selection():
-            self.ts.Remove(item)
+            if sys.platform != "win32":
+                self.ts.Remove(item)
             self.tree.delete(item)
         
     def UpdateOptions(self):
