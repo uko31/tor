@@ -125,6 +125,12 @@ class TransmissionServer:
         self._conn.remove_torrent(id)
         return(task)
 
+    def Stop(self, id):
+        self._conn.stop_torrent(id)
+
+    def Start(self, id):
+        self._conn.start_torrent(id)
+
     def Purge(self, id):
         tor = self._conn.get_torrent(id)
         task = Task(id=tor.id, status=tor.status, progress=tor.progress, name=tor.name)
@@ -199,6 +205,8 @@ class ViewGUI:
     
     def InitMenu(self):
         self.context_menu = Menu(self.parent, tearoff=0)
+        self.context_menu.add_command(label="Stop",  command=self.StopCurrent)
+        self.context_menu.add_command(label="Start", command=self.StartCurrent)
         self.context_menu.add_command(label="Clear", command=self.ClearCurrent)
         self.context_menu.add_command(label="Purge", command=self.PurgeCurrent)
     
@@ -206,22 +214,33 @@ class ViewGUI:
         item = self.tree.item(self.tree.identify("item", event.x, event.y))
         if item["text"] != "":
             self.context_menu.post(event.x_root, event.y_root)
-            print("item: %s" % item["text"])
             self.current_item = item["text"]
         else:
             self.context_menu.unpost()
             
     def ClearCurrent(self):
-        #logging.info("Clear current item [%d]" % self.current_item)
+        #logging.info("Clear current torrent [%d]" % self.current_item)
         if sys.platform != "win32":
             self.ts.Remove(self.current_item)
         self.tree.delete(self.current_item)
 
     def PurgeCurrent(self):
-        #logging.info("Purge current item [%d]" % self.current_item)
+        #logging.info("Purge current torrent [%d]" % self.current_item)
         if sys.platform != "win32":
             self.ts.Purge(self.current_item)
         self.tree.delete(self.current_item)
+
+    def StopCurrent(self):
+        #logging.info("Pause current torrent [%d]" % self.current_item)
+        if sys.platform != "win32":
+            self.ts.Stop(self.current_item)
+        #self.Update
+    
+    def StartCurrent(self):
+        #logging.info("Pause current torrent [%d]" % self.current_item)
+        if sys.platform != "win32":
+            self.ts.Start(self.current_item)
+        #self.Update
     
     def InitUI(self):
         self.main_frame   = Frame(self.parent)
