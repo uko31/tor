@@ -224,6 +224,7 @@ class ViewGUI:
         self.tree.delete(self.current_item)
     
     def InitUI(self):
+        self.main_frame   = Frame(self.parent)
         self.top_frame    = Frame(self.parent)
         self.bottom_frame = Frame(self.parent)
         
@@ -242,16 +243,16 @@ class ViewGUI:
         self.selectall_button = Button(self.top_frame,    text="Select All", width=8, command=self.SelectAll)#,     image = self.selectImage)
         self.options_button   = Button(self.bottom_frame, text="Options",    width=8, command=self.UpdateOptions)#, image = self.setupImage)
         self.quit_button      = Button(self.bottom_frame, text="Quit",       width=8, command=self.Quit)#,               image = self.exitImage)
-        self.tree             = ttk.Treeview(self.parent)
-        self.v_scroll_tree    = ttk.Scrollbar(self.parent, orient='vertical', command=self.tree.yview)
-        self.h_scroll_tree    = ttk.Scrollbar(self.parent, orient='horizontal', command=self.tree.xview)
+        self.tree             = ttk.Treeview(self.main_frame)
+        self.v_scroll_tree    = ttk.Scrollbar(self.main_frame, orient='vertical', command=self.tree.yview)
+        self.h_scroll_tree    = ttk.Scrollbar(self.main_frame, orient='horizontal', command=self.tree.xview)
         
         self.tree.configure(yscroll=self.v_scroll_tree.set, xscroll=self.h_scroll_tree.set)
         self.tree["columns"]=("status", "progress", "name")
-        self.tree.column("#0",       width=50)
-        self.tree.column("status",   width=110)
-        self.tree.column("progress", width=70)
-        self.tree.column("name",     width=350)
+        self.tree.column("#0",       width=50,  minwidth=50,  stretch=False)
+        self.tree.column("status",   width=110, minwidth=110, stretch=False)
+        self.tree.column("progress", width=70,  minwidth=70,  stretch=False)
+        self.tree.column("name",     width=350, minwidth=350)
         self.tree.heading("#0",       text="Id")
         self.tree.heading("status",   text="Status")
         self.tree.heading("progress", text="%")
@@ -266,10 +267,17 @@ class ViewGUI:
         self.tree.bind("<Button-3>", self.popup)
         
         self.top_frame.grid    (row=0, column=0, sticky=W)
-        self.tree.grid         (row=1, column=0)
-        self.v_scroll_tree.grid(row=1, column=1, sticky='ns')
-        self.h_scroll_tree.grid(row=2, column=0, sticky='ew')
-        self.bottom_frame.grid (row=3, column=0, sticky=E)
+        self.main_frame.grid   (row=1, column=0, sticky=W+E+N+S)
+        self.tree.grid         (row=0, column=0, sticky=W+E+N+S)
+        self.h_scroll_tree.grid(row=1, column=0, sticky=E+W)
+        self.v_scroll_tree.grid(row=0, column=1, sticky=N+S)
+        self.bottom_frame.grid (row=2, column=0, sticky=E)
+
+        # gestion de la redimension de la fenetre principale (self.main_frame)
+        Grid.rowconfigure   (self.parent,     1, weight=1)
+        Grid.columnconfigure(self.parent,     0, weight=1)
+        Grid.rowconfigure   (self.main_frame, 0, weight=1, minsize=200)
+        Grid.columnconfigure(self.main_frame, 0, weight=1, minsize=580)
         
         self.refresh_button.grid  (row=0, column=0, padx=2, pady=2)
         self.clear_button.grid    (row=0, column=1, padx=2, pady=2)
