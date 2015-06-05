@@ -247,24 +247,21 @@ class ViewGUI:
         self.top_frame    = Frame(self.parent)
         self.bottom_frame = Frame(self.parent)
         
-        self.refreshImage = PhotoImage(file = "./refresh.gif", width=48, height=48)
-        self.selectImage  = PhotoImage(file = "./select.gif",  width=48, height=48)
-        self.setupImage   = PhotoImage(file = "./setup.gif",   width=48, height=48)
-        self.startImage   = PhotoImage(file = "./start.gif",   width=48, height=48)
-        self.stopImage    = PhotoImage(file = "./stop.gif",    width=48, height=48)
-        self.clearImage   = PhotoImage(file = "./clear.gif",   width=48, height=48)
-        self.purgeImage   = PhotoImage(file = "./purge.gif",   width=48, height=48)
-        self.exitImage    = PhotoImage(file = "./exit.gif",    width=48, height=48)
-        self.addImage     = PhotoImage(file = "./add.gif",     width=48, height=48)
+        #self.refreshImage = PhotoImage(file = "refresh.gif",       width=32, height=32)
+        #self.exitImage    = PhotoImage(file = "exit.gif",          width=32, height=32)
+        #self.garbageImage = PhotoImage(file = "garbage.gif",       width=45, height=32)
+        #self.trashImage   = PhotoImage(file = "trash.gif",         width=32, height=32)
+        #self.setupImage   = PhotoImage(file = "setup-options.gif", width=32, height=32)
+        #self.clearImage   = PhotoImage(file = "clear-icon.gif",    width=32, height=32)
+        #self.selectImage  = PhotoImage(file = "select-all.gif",    width=32, height=32)
         
-        self.add_button     = Button(self.top_frame,    text="Add",        width=48, command=self.AddAll,        image = self.addImage)
-        self.refresh_button = Button(self.top_frame,    text="Refresh",    width=48, command=self.UpdateList,    image = self.refreshImage)
-        self.clear_button   = Button(self.top_frame,    text="Clear All",  width=48, command=self.Clear,      image = self.clearImage)
-        self.purge_button   = Button(self.top_frame,    text="Purge",      width=48, command=self.Purge,         image = self.purgeImage)
-        self.select_button  = Button(self.top_frame,    text="Select All", width=48, command=self.SelectAll,     image = self.selectImage)
-        self.setup_button   = Button(self.bottom_frame, text="Options",    width=48, command=self.UpdateOptions, image = self.setupImage)
-        self.quit_button    = Button(self.bottom_frame, text="Quit",       width=48, command=self.Quit,          image = self.exitImage)
-        
+        self.refresh_button   = Button(self.top_frame,    text="Refresh",    width=8, command=self.UpdateList)#,    image = self.refreshImage)
+        self.clear_button     = Button(self.top_frame,    text="Clear",      width=8, command=self.Clear)#,         image = self.clearImage)
+        self.purge_button     = Button(self.top_frame,    text="Purge",      width=8, command=self.Purge)#,         image = self.trashImage)
+        self.purgeall_button  = Button(self.top_frame,    text="Purge All",  width=8, command=self.PurgeAll)#,      image = self.garbageImage)
+        self.selectall_button = Button(self.top_frame,    text="Select All", width=8, command=self.SelectAll)#,     image = self.selectImage)
+        self.options_button   = Button(self.bottom_frame, text="Options",    width=8, command=self.UpdateOptions)#, image = self.setupImage)
+        self.quit_button      = Button(self.bottom_frame, text="Quit",       width=8, command=self.Quit)#,               image = self.exitImage)
         self.tree             = ttk.Treeview(self.main_frame)
         self.v_scroll_tree    = ttk.Scrollbar(self.main_frame, orient='vertical', command=self.tree.yview)
         self.h_scroll_tree    = ttk.Scrollbar(self.main_frame, orient='horizontal', command=self.tree.xview)
@@ -303,13 +300,13 @@ class ViewGUI:
         Grid.rowconfigure   (self.main_frame, 0, weight=1, minsize=200)
         Grid.columnconfigure(self.main_frame, 0, weight=1, minsize=580)
         
-        self.add_button.grid    (row=0, column=0, padx=2, pady=2)
-        self.refresh_button.grid(row=0, column=1, padx=2, pady=2)
-        self.clear_button.grid  (row=0, column=2, padx=2, pady=2)
-        self.purge_button.grid  (row=0, column=3, padx=2, pady=2)
-        self.select_button.grid (row=0, column=4, padx=2, pady=2)
+        self.refresh_button.grid  (row=0, column=0, padx=2, pady=2)
+        self.clear_button.grid    (row=0, column=1, padx=2, pady=2)
+        self.purge_button.grid    (row=0, column=2, padx=2, pady=2)
+        self.purgeall_button.grid (row=0, column=3, padx=2, pady=2)
+        self.selectall_button.grid(row=0, column=4, padx=2, pady=2)
         
-        self.setup_button.grid(row=0, column=0, padx=2, pady=2)
+        self.options_button.grid(row=0, column=0, padx=2, pady=2)
         self.quit_button.grid   (row=0, column=1, padx=2, pady=2)
 
     def UpdateList(self):
@@ -357,23 +354,15 @@ class ViewGUI:
                 self.ts.Purge(item)
             self.tree.delete(item)
 
-    #def PurgeAll(self):
-        #self.SelectAll()
-        #self.Purge()
+    def PurgeAll(self):
+        self.SelectAll()
+        self.Purge()
 
     def Clear(self):
-        for item in self.tree.get_children():
-            if self.tree.item(item)['values'][0] == "seeding":
-                if sys.platform != "win32":
-                    self.ts.Remove(item)
-                self.tree.delete(item)
-            
-    def AddAll(self):
-        for root, dirs, files in os.walk(self.cfg._input_dir):
-            if ( root == self.cfg._input_dir ):
-                for f in files:
-                    if ( f.rsplit('.', 1)[1] == 'torrent' ): # faire en sorte de prendre en compte cfg.ext + choix multiples
-                        self.ts.Add(os.path.join(root,f))
+        for item in self.tree.selection():
+            if sys.platform != "win32":
+                self.ts.Remove(item)
+            self.tree.delete(item)
         
     def UpdateOptions(self):
         self.updateInput    = StringVar()
