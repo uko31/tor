@@ -95,8 +95,6 @@ class Task:
         self._progress = float(progress)
         self._name     = name
 
-=======
-
 # constants:
 # - - - - - 
 __VERSION__ = "0.2.0"
@@ -115,7 +113,6 @@ class Task:
         self._progress = float(progress)
         self._name     = name
 
->>>>>>> tor_gui
     def __str__(self):
         return("%-3s - %-11s - [%3.00f%%] %s" % (self._id, self._status, self._progress, self._name))
 
@@ -139,7 +136,6 @@ class TransmissionServer:
             
         os.remove(filename)
         return(task)
-<<<<<<< HEAD
 
     def Remove(self, id):
         tor = self._conn.get_torrent(id)
@@ -319,8 +315,6 @@ class ViewGUI:
         self.updateHostname = StringVar()
         self.updatePort     = StringVar()
         self.updateExt      = StringVar()
-
-=======
 
     def Remove(self, id):
         tor = self._conn.get_torrent(id)
@@ -585,7 +579,6 @@ class ViewGUI:
         self.updatePort     = StringVar()
         self.updateExt      = StringVar()
 
->>>>>>> tor_gui
         self.updateInput.set(self.cfg._input_dir)
         self.updateOutput.set(self.cfg._output_dir)
         self.updateHostname.set(self.cfg._hostname)
