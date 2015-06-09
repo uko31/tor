@@ -4,6 +4,13 @@
 # Date    : Feb. 2015
 # Version : 0.2
 
+# to do list:
+#   - add logging system
+#   - add activity log
+#   - add a "add select feature"
+#   - enhance setup dialog : go modal, and better display of information
+#   - create a "tor" module and dispatch classes into separate files
+
 # classes description:
 # - - - - - - - - - - 
 
