@@ -81,24 +81,6 @@ if sys.platform != "win32":
 # - - - - - 
 __VERSION__ = "0.2.0"
 __DELAY__   = 2
-if   sys.platform == "linux2":
-    __CONFIG_FILE__ = os.getenv("HOME")+"/.config/tor/config.json"
-elif sys.platform == "win32":
-    __CONFIG_FILE__ = ".\\config.json"
-
-# code:
-# - - -
-class Task:
-    def __init__(self, id, name, status = None, progress = 0):
-        self._id       = id
-        self._status   = status
-        self._progress = float(progress)
-        self._name     = name
-
-# constants:
-# - - - - - 
-__VERSION__ = "0.2.0"
-__DELAY__   = 2
 if   sys.platform == "linux":
     __CONFIG_FILE__ = os.getenv("HOME")+"/.config/tor/config.json"
 elif sys.platform == "win32":
