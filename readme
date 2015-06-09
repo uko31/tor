@@ -1,3 +1,5 @@
+Update: working on adding a "add select" method.
+
 tor : my download utility script:
 
 usage: tor [-h] [-g] [-d] [-l] [-c] [-P] [-v] [-a FILENAME] [-r ID] [-p ID]
