@@ -76,7 +76,6 @@ from tkinter import ttk
 
 if sys.platform != "win32":
     import transmissionrpc
-<<<<<<< HEAD
 
 # constants:
 # - - - - - 
