@@ -102,6 +102,6 @@ if __name__ == "__main__":
                 view.List( ts.List() )
 
             if ( opt.version ):
-                ts.version()
+                print(ts.Version())
                 print(cfg)
 

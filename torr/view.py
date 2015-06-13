@@ -244,33 +244,38 @@ class ViewGUI:
         self.updatePort.set(self.cfg._port)
         self.updateExt.set(self.cfg._ext)
     
-        options = Toplevel()
-        inputLabel    = Label (options, text = "Input Directory:")
-        outputLabel   = Label (options, text = "Output Directory:")
-        hostnameLabel = Label (options, text = "Hostname:")
-        portLabel     = Label (options, text = "Port:")
-        extLabel      = Label (options, text = "Extensions:")
+        self.SetupWindow = Toplevel()
+        
+        frame = ttk.LabelFrame(self.SetupWindow, text="Options")
+        
+        inputLabel    = Label (frame, text = "Input Directory:",  anchor=E)
+        outputLabel   = Label (frame, text = "Output Directory:", anchor=E)
+        hostnameLabel = Label (frame, text = "Hostname:",         anchor=E)
+        portLabel     = Label (frame, text = "Port:",             anchor=E)
+        extLabel      = Label (frame, text = "Extensions:",       anchor=E)
 
-        inputEntry    = Entry (options, textvariable = self.updateInput) 
-        outputEntry   = Entry (options, textvariable = self.updateOutput)
-        hostnameEntry = Entry (options, textvariable = self.updateHostname)
-        portEntry     = Entry (options, textvariable = self.updatePort)
-        extEntry      = Entry (options, textvariable = self.updateExt)
-        okButton      = Button(options, text = "Ok", command=self.ProcessOptions)
+        inputEntry    = Entry (frame, textvariable = self.updateInput,    bg='white') 
+        outputEntry   = Entry (frame, textvariable = self.updateOutput,   bg='white')
+        hostnameEntry = Entry (frame, textvariable = self.updateHostname, bg='white')
+        portEntry     = Entry (frame, textvariable = self.updatePort,     bg='white')
+        extEntry      = Entry (frame, textvariable = self.updateExt,      bg='white')
+        okButton      = Button(self.SetupWindow, text = "Ok", command=self.ProcessOptions)
         
-        inputLabel.   grid(row = 0, column = 0)
-        outputLabel.  grid(row = 1, column = 0)
-        hostnameLabel.grid(row = 2, column = 0)
-        portLabel.    grid(row = 3, column = 0)
-        extLabel.     grid(row = 4, column = 0)
+        frame.grid(row=0, column=0, padx=5, pady=5, ipadx=5, ipady=5)
         
-        inputEntry.   grid(row = 0, column = 1)
-        outputEntry.  grid(row = 1, column = 1)
-        hostnameEntry.grid(row = 2, column = 1)
-        portEntry.    grid(row = 3, column = 1)
-        extEntry.     grid(row = 4, column = 1)
+        inputLabel.   grid(row = 0, column = 0, padx=5, pady=5, sticky=E+W)
+        outputLabel.  grid(row = 1, column = 0, padx=5, pady=5, sticky=E+W)
+        hostnameLabel.grid(row = 2, column = 0, padx=5, pady=5, sticky=E+W)
+        portLabel.    grid(row = 3, column = 0, padx=5, pady=5, sticky=E+W)
+        extLabel.     grid(row = 4, column = 0, padx=5, pady=5, sticky=E+W)
         
-        okButton.     grid(row = 5, column = 1)
+        inputEntry.   grid(row = 0, column = 1, padx=5, pady=5)
+        outputEntry.  grid(row = 1, column = 1, padx=5, pady=5)
+        hostnameEntry.grid(row = 2, column = 1, padx=5, pady=5)
+        portEntry.    grid(row = 3, column = 1, padx=5, pady=5)
+        extEntry.     grid(row = 4, column = 1, padx=5, pady=5)
+        
+        okButton.     grid(row = 1, column = 0, padx=5, pady=5)
        
     def ProcessOptions(self):
         self.cfg._input_dir  = self.updateInput.get()
@@ -279,6 +284,8 @@ class ViewGUI:
         self.cfg._port       = self.updatePort.get()
         self.cfg._ext        = self.updateExt.get()
         self.cfg.Update()
+        
+        self.SetupWindow.destroy()
         
     def Quit(self):
         self.thread.go = False

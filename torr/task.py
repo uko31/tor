@@ -75,5 +75,5 @@ class TransmissionServer:
         return(tasks)
 
     def Version(self):
-        return("version: %s", TransmissionServer.version)
+        return("version: %s" % TransmissionServer.version)
         
