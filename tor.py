@@ -4,13 +4,6 @@
 # Date    : Feb. 2015
 # Version : 0.2
 
-# to do list:
-#   - add logging system
-#   - add activity log
-#   - add a "add select feature"
-#   - enhance setup dialog : go modal, and better display of information
-#   - create a "tor" module and dispatch classes into separate files
-
 # classes description:
 # - - - - - - - - - - 
 
@@ -128,13 +121,13 @@ class TransmissionServer:
 
     def Remove(self, id):
         tor = self._conn.get_torrent(id)
-        task = Task(tor.id, tor.status, tor.progress, tor.name)
+        task = Task(id=tor.id, status=tor.status, progress=tor.progress, name=tor.name)
         self._conn.remove_torrent(id)
         return(task)
 
     def Purge(self, id):
         tor = self._conn.get_torrent(id)
-        task = Task(tor.id, tor.status, tor.progress, tor.name)
+        task = Task(id=tor.id, status=tor.status, progress=tor.progress, name=tor.name)
         self._conn.remove_torrent(id, delete_data=True)
         return(task)
     
@@ -154,7 +147,8 @@ class TransmissionServer:
     def Version(self):
         return("version: %s", __VERSION__)
         
-
+    # def __str__(self):
+        
 class ViewCLI:
     def __init__(self):
         self.version = "cli"
