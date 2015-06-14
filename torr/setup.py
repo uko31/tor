@@ -6,7 +6,7 @@ import os
 import os.path
 
 class torr_setup:
-    filename   = "%s/.config/tor/config.json" % os.getenv("HOME")
+    filename   = "%s/.config/torr/setup.json" % os.getenv("HOME")
     hostname   = "nas"
     port       = 9091
     ext        = "*.torrent"
@@ -23,6 +23,8 @@ class torr_setup:
                 fd.close()
             except IOError as e:
                 print("ERROR while tryin to open [%s]" % (e.info, torr_setup.filename))
+        else:
+            torr_setup.update()
 
     @staticmethod
     def update():
