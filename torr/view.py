@@ -9,8 +9,6 @@ import threading
 from tkinter import *
 from tkinter import ttk
 
-__DELAY__   = 2
-
 class ViewCLI:
     def __init__(self):
         self.version = "cli"
@@ -35,16 +33,17 @@ class ViewCLI:
         return(True)
 
 class UpdateThread(threading.Thread):
-    def __init__(self, parent, delay):
+    delay = 2
+    
+    def __init__(self, parent):
         threading.Thread.__init__(self)
         self.parent = parent
         self.go = True
-        self.delay = delay
         
     def run(self):
         while self.go:
             self.parent.UpdateList()
-            time.sleep(self.delay)
+            time.sleep(UpdateThread.delay)
         
         
 class ViewGUI:
@@ -56,7 +55,7 @@ class ViewGUI:
         
         self.InitMenu()
         self.InitUI()
-        self.thread = UpdateThread(self, __DELAY__)
+        self.thread = UpdateThread(self)
         self.thread.start()
     
     def InitMenu(self):
