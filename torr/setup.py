@@ -5,94 +5,91 @@ import json
 import os
 import os.path
 
-class Configuration:
-    def __init__(self, filename, 
-                 hostname   = "nas", 
-                 input_dir  = "%s/dl" % os.getenv("HOME"), 
-                 output_dir = "%s/mnt/nas/downloads" % os.getenv("HOME"), 
-                 port       = "9091",
-                 ext        = "*.torrent"):
-
-        self._filename   = filename
-        self._hostname   = hostname
-        self._input_dir  = input_dir
-        self._output_dir = output_dir
-        self._port       = port
-        self._ext        = ext
-
-        if os.path.isfile(self._filename):
+class torr_setup:
+    filename   = "%s/.config/tor/config.json" % os.getenv("HOME")
+    hostname   = "nas"
+    port       = 9091
+    ext        = "*.torrent"
+    input_dir  = "%s/dl" % os.getenv("HOME")
+    output_dir = "%s/mnt/nas/downloads" % os.getenv("HOME")
+    
+    @staticmethod
+    def read():
+        if os.path.isfile(torr_setup.filename):
             try:
-                fd = open(self._filename, "r")
+                fd = open(torr_setup.filename, "r")
                 for key, value in dict(json.load(fd)).items():
-                    setattr(self, "_%s" % key, value)
+                    setattr(torr_setup, "%s" % key, value)
                 fd.close()
             except IOError as e:
-                print("ERROR while tryin to open [%s]" % (e.info, self._filename))
-        else:
-            self.Update()
+                print("ERROR while tryin to open [%s]" % (e.info, torr_setup.filename))
 
-    def Update(self):
-        if not os.path.isdir(os.path.dirname(self._filename)):
-            print(os.path.dirname(self._filename))
-            os.makedirs(os.path.dirname(self._filename))
+    @staticmethod
+    def update():
+        if not os.path.isdir(os.path.dirname(torr_setup.filename)):
+            print( os.path.dirname(torr_setup.filename) )
+            os.makedirs( os.path.dirname(torr_setup.filename) )
         try:
-            fd = open(self._filename, "w")
-            string = json.dump({"hostname": "%s" % self._hostname,
-                                "input_dir": "%s" % self._input_dir,
-                                "output_dir": "%s" % self._output_dir,
-                                "port": "%s" % self._port, 
-                                "ext": "%s" % self._ext},
-                               fd, indent = 4, sort_keys = True)
+            fd = open(torr_setup.filename, "w")
+            string = json.dump( {"hostname": "%s"   % torr_setup.hostname,
+                                 "input_dir": "%s"  % torr_setup.input_dir,
+                                 "output_dir": "%s" % torr_setup.output_dir,
+                                 "port": "%s"       % torr_setup.port, 
+                                 "ext": "%s"        % torr_setup.ext},
+                                fd, indent = 4, sort_keys = True)
             fd.close()
         except IOError as e:
-            print("ERROR while tryin to open [%s]" % (e.info, self._filename))
-        
-    def __str__(self):
+            print("ERROR while tryin to open [%s]" % (e.info, torr_setup.filename))
+
+    @staticmethod
+    def display():
         s = "Display configuration:\n"
-        for key in dir(self):
-            if not key.count("__") and not str(getattr(self, key)).count("<bound method") and key.count("_", 0, 1):
-                s = "%s >> %-11s : %s\n" % (s, key, getattr(self, key))
-        return(s)
+        for key in dir(torr_setup):
+            if not key.count("__") and not str(getattr(torr_setup, key)).count("<function"):
+                s = "%s >> %-11s : %s\n" % (s, key, getattr(torr_setup, key))
+        print(s)
 
-class Options:
-    def __init__(self):
-        self._parser = argparse.ArgumentParser(prog="tor")
+class torr_option:
+    @staticmethod
+    def init():
+        torr_option.parser = argparse.ArgumentParser(prog="torr")
 
-        # Grphic User Interface:
-        self._parser.add_argument("-g", "--gui", action="store_true", help="launch the GUI")
+        # Graphic User Interface:
+        torr_option.parser.add_argument("-g", "--gui", action="store_true", help="launch the GUI")
 
         # global operations:
-        self._parser.add_argument("-d", "--download", action="store_true", help="download all file from the input directory")
-        self._parser.add_argument("-l", "--list",     action="store_true", help="display all download tasks")
-        self._parser.add_argument("-c", "--clear",    action="store_true", help="remove all finished tasks")
-        self._parser.add_argument("-P", "--Purge",    action="store_true", help="purge all download tasks")
-        self._parser.add_argument("-v", "--version",  action="store_true", help="version")
+        torr_option.parser.add_argument("-d", "--download", action="store_true", help="download all file from the input directory")
+        torr_option.parser.add_argument("-l", "--list",     action="store_true", help="display all download tasks")
+        torr_option.parser.add_argument("-c", "--clear",    action="store_true", help="remove all finished tasks")
+        torr_option.parser.add_argument("-P", "--Purge",    action="store_true", help="purge all download tasks")
+        torr_option.parser.add_argument("-v", "--version",  action="store_true", help="version")
 
         # single operations:
-        self._parser.add_argument("-a", "--add",    metavar = "FILENAME", help="download file specified")
-        self._parser.add_argument("-r", "--remove", metavar = "ID",       help="remove download task specified by id")
-        self._parser.add_argument("-p", "--purge",  metavar = "ID",       help="purge download task specified by id")
+        torr_option.parser.add_argument("-a", "--add",    metavar = "FILENAME", help="download file specified")
+        torr_option.parser.add_argument("-r", "--remove", metavar = "ID",       help="remove download task specified by id")
+        torr_option.parser.add_argument("-p", "--purge",  metavar = "ID",       help="purge download task specified by id")
 
         # update configuration:
-        self._parser.add_argument("--input",  metavar = "INPUT_DIRECTORY",  help="update input configuration variable")
-        self._parser.add_argument("--output", metavar = "OUTPUT_DIRECTORY", help="update output configuration variable")
-        self._parser.add_argument("--port",   help="update port configuration variable", type=int)
-        self._parser.add_argument("--ext",    help="update ext configuration variable")
+        torr_option.parser.add_argument("--input",  metavar = "INPUT_DIRECTORY",  help="update input configuration variable")
+        torr_option.parser.add_argument("--output", metavar = "OUTPUT_DIRECTORY", help="update output configuration variable")
+        torr_option.parser.add_argument("--port",   help="update port configuration variable", type=int)
+        torr_option.parser.add_argument("--ext",    help="update ext configuration variable")
         
-        self.ParseArgs()
-
-    def ParseArgs(self):
-        args = self._parser.parse_args()
-        for a in dir(args):
-            if not a.count("__") and not a.count("_get"):
-                setattr(self, a, getattr(args, a))
-        
-    def __str__(self):
+        # parse arguments & set static attributes:
+        args = torr_option.parser.parse_args()
+        for arg in dir(args):
+            if not arg.count("__") and not arg.count("_get"):
+                setattr(torr_option, arg, getattr(args, arg))
+    
+    @staticmethod
+    def display():
         s = "Display Options:\n"
     
-        if ( self.add ):
-            s = "%s >> add: %s\n" % (s, self.add)
-        if ( self.download ):
-            s = "%s >> download: %s\n" % (s, self.download)
+        if ( torr_option.add ):
+            s = "%s >> add: %s\n" % (s, torr_option.add)
+        if ( torr_option.download ):
+            s = "%s >> download: %s\n" % (s, torr_option.download)
         
-        return(s)
+        print(s)
+
+    

@@ -6,6 +6,8 @@ import os.path
 import time
 import threading
 
+from torr.setup import torr_setup
+
 from tkinter import *
 from tkinter import ttk
 
@@ -47,11 +49,10 @@ class UpdateThread(threading.Thread):
         
         
 class ViewGUI:
-    def __init__(self, parent, ts, cfg):
+    def __init__(self, parent, ts):
         self.version = "gui"
         self.parent = parent
         self.ts  = ts
-        self.cfg = cfg
         
         self.InitMenu()
         self.InitUI()
@@ -224,8 +225,8 @@ class ViewGUI:
                 self.tree.delete(item)
             
     def AddAll(self):
-        for root, dirs, files in os.walk(self.cfg._input_dir):
-            if ( root == self.cfg._input_dir ):
+        for root, dirs, files in os.walk(torr_setup.input_dir):
+            if ( root == torr_setup.input_dir ):
                 for f in files:
                     if ( f.rsplit('.', 1)[1] == 'torrent' ): # faire en sorte de prendre en compte cfg.ext + choix multiples
                         self.ts.Add(os.path.join(root,f))
@@ -237,11 +238,11 @@ class ViewGUI:
         self.updatePort     = StringVar()
         self.updateExt      = StringVar()
 
-        self.updateInput.set(self.cfg._input_dir)
-        self.updateOutput.set(self.cfg._output_dir)
-        self.updateHostname.set(self.cfg._hostname)
-        self.updatePort.set(self.cfg._port)
-        self.updateExt.set(self.cfg._ext)
+        self.updateInput.set(torr_setup.input_dir)
+        self.updateOutput.set(torr_setup.output_dir)
+        self.updateHostname.set(torr_setup.hostname)
+        self.updatePort.set(torr_setup.port)
+        self.updateExt.set(torr_setup.ext)
     
         self.SetupWindow = Toplevel()
         
@@ -277,12 +278,12 @@ class ViewGUI:
         okButton.     grid(row = 1, column = 0, padx=5, pady=5)
        
     def ProcessOptions(self):
-        self.cfg._input_dir  = self.updateInput.get()
-        self.cfg._output_dir = self.updateOutput.get()
-        self.cfg._hostname   = self.updateHostname.get()
-        self.cfg._port       = self.updatePort.get()
-        self.cfg._ext        = self.updateExt.get()
-        self.cfg.Update()
+        torr_setup.input_dir  = self.updateInput.get()
+        torr_setup.output_dir = self.updateOutput.get()
+        torr_setup.hostname   = self.updateHostname.get()
+        torr_setup.port       = self.updatePort.get()
+        torr_setup.ext        = self.updateExt.get()
+        torr_setup.update()
         
         self.SetupWindow.destroy()
         
